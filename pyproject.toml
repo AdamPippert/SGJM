@@ -10,7 +10,18 @@ requires-python = ">=3.10"
 dependencies = []
 
 [project.optional-dependencies]
-torch = ["torch>=2.2"]
+# Pick exactly one backend extra plus dev:
+#   pip install -e '.[cpu,dev]'                         # any platform, slow
+#   pip install -e '.[cuda,dev]'                        # NVIDIA + CUDA wheels (default PyPI)
+#   pip install -e '.[mlx,dev]'                         # macOS Apple Silicon (M1/M2/M3/M4)
+# ROCm/Strix Halo: do NOT use the [rocm] extra alone — torch ROCm wheels live
+# on a separate index. Install with:
+#   pip install --index-url https://download.pytorch.org/whl/rocm6.2 torch
+#   pip install -e '.[rocm,dev]'
+cpu = ["torch>=2.4", "numpy>=1.26"]
+cuda = ["torch>=2.4", "numpy>=1.26"]
+rocm = ["numpy>=1.26"]
+mlx = ["mlx>=0.18", "numpy>=1.26"]
 dev = ["pytest>=8.0"]
 
 [tool.setuptools.packages.find]
