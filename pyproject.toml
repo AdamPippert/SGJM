@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sgjm"
+version = "0.0.1"
+description = "Speculative Graph JEPA Model — Phase 1 local research harness"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+torch = ["torch>=2.2"]
+dev = ["pytest>=8.0"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
