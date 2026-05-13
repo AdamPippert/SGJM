@@ -34,6 +34,8 @@ def _build_config(args: argparse.Namespace) -> TrainingConfig:
         cfg.checkpoint_dir = f"runs/{cfg.arch}-25m"
     if args.data_path:
         cfg.data_path = args.data_path
+    if args.data_source:
+        cfg.data_source = args.data_source
     if args.amp:
         cfg.amp = args.amp
     if args.compile is not None:
@@ -58,6 +60,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--lr", type=float, default=None)
     parser.add_argument("--checkpoint-dir", type=str, default=None)
     parser.add_argument("--data-path", type=str, default=None)
+    parser.add_argument("--data-source", choices=["auto", "synthetic", "tinyshakespeare", "file"],
+                        default=None)
     parser.add_argument("--amp", choices=["auto", "off", "bf16", "fp16"], default=None)
     parser.add_argument("--compile", action=argparse.BooleanOptionalAction, default=None)
     parser.add_argument("--seed", type=int, default=None)

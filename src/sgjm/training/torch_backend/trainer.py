@@ -113,7 +113,7 @@ def train(
     train_rng = random.Random(cfg.seed)
     eval_rng = random.Random(cfg.seed + 1)
 
-    corpus = load_corpus(cfg.data_path, cfg.corpus_bytes, seed=cfg.seed)
+    corpus = load_corpus(cfg.data_path, cfg.corpus_bytes, seed=cfg.seed, source=cfg.data_source)
     split = int(0.95 * len(corpus))
     train_set = ByteDataset(corpus[:split], cfg.optim.seq_len)
     eval_set = ByteDataset(corpus[split:], cfg.optim.seq_len)

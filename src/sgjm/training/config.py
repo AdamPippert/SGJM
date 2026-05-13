@@ -63,6 +63,7 @@ class TrainingConfig:
     optim: OptimConfig = field(default_factory=OptimConfig)
     loss: LossWeights = field(default_factory=LossWeights)
     data_path: str | None = None
+    data_source: str = "auto"  # "auto" | "synthetic" | "tinyshakespeare" | "file"
     corpus_bytes: int = 1 << 20
     checkpoint_dir: str = "runs/sgjm-25m"
     log_every: int = 25
