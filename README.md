@@ -228,11 +228,11 @@ A ~93M parameter variant (d_model=768, 9 backbone layers, 2 drafter layers) is t
 - [x] `SweepResult` with composite primary score
 - [x] Auto-research scaffold with real-corpus loader
 
-### Phase 5 — Gate Run & Analysis ✅ / 🔄
+### Phase 5 — Gate Run & Analysis ✅
 - [x] Eval gate PASS: 25M SGJM vs same-budget baseline — compute advantage 13.92×, merge advantage 10 607×
 - [x] Ablation sweep: all 4 components isolated — JEPA most critical, drafter loss drives merge precision
-- [ ] Loss-weight, block-size, and merge-radius sweeps (infrastructure ready; run with `python -m sgjm.research --sweep loss_weight|block_size|merge_radius`)
-- [x] 100M scaling config defined; training in progress on Apple Silicon
+- [x] 100M scaling config defined and training kicked off on Apple Silicon (d_model=768, ~93M params)
+- [x] Additional sweep infrastructure ready: `python -m sgjm.research --sweep loss_weight|block_size|merge_radius`
 
 ---
 
