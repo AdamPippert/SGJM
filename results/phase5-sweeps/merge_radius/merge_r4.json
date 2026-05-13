@@ -1,0 +1,60 @@
+{
+  "card": {
+    "name": "merge_r4",
+    "hypothesis": "merge_radius=4 bits trades recall vs precision.",
+    "overrides": {
+      "_eval.merge_radius_bits": 4
+    },
+    "expected_signal": "Larger radius merges more aggressively (higher recall, lower precision).",
+    "arch": "sgjm",
+    "pair_with_baseline": true
+  },
+  "elapsed_sec": 434.1236250400543,
+  "sgjm_metrics": {
+    "n_tokens": 65536,
+    "n_positions": 64512,
+    "token_nll": 0.10106796305626631,
+    "token_ppl": 1.1063518302600648,
+    "branch_acceptance_rate": 0.6330605158730159,
+    "jepa_top1_acc": 0.9747798859126984,
+    "jepa_chance_top1": 0.1111111111111111,
+    "merge_precision_js": NaN,
+    "random_pair_js": 0.6891234917483285,
+    "merge_precision_advantage": 1.0,
+    "compute_per_accepted_token": 2990892.9755142014
+  },
+  "baseline_metrics": {
+    "n_tokens": 65536,
+    "token_nll": 0.08837724756449461,
+    "token_ppl": 1.0924001496010023,
+    "compute_per_token": 26354304.0
+  },
+  "comparison": {
+    "sgjm": {
+      "n_tokens": 65536,
+      "n_positions": 64512,
+      "token_nll": 0.10106796305626631,
+      "token_ppl": 1.1063518302600648,
+      "branch_acceptance_rate": 0.6330605158730159,
+      "jepa_top1_acc": 0.9747798859126984,
+      "jepa_chance_top1": 0.1111111111111111,
+      "merge_precision_js": NaN,
+      "random_pair_js": 0.6891234917483285,
+      "merge_precision_advantage": 1.0,
+      "compute_per_accepted_token": 2990892.9755142014
+    },
+    "baseline": {
+      "n_tokens": 65536,
+      "token_nll": 0.08837724756449461,
+      "token_ppl": 1.0924001496010023,
+      "compute_per_token": 26354304.0
+    },
+    "nll_delta": 0.012690715491771698,
+    "compute_advantage": 8.811516900055278,
+    "gate_passed": false,
+    "gate_reasons": [
+      "merge_precision_advantage=1.00 < 1.5"
+    ]
+  },
+  "error": null
+}

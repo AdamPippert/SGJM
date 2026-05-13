@@ -1,0 +1,60 @@
+{
+  "card": {
+    "name": "jepa_w_0.05",
+    "hypothesis": "jepa weight 0.05 balances aux signal vs token CE.",
+    "overrides": {
+      "loss.jepa": 0.05
+    },
+    "expected_signal": "Find the smallest weight that keeps jepa_top1_acc above chance.",
+    "arch": "sgjm",
+    "pair_with_baseline": true
+  },
+  "elapsed_sec": 432.5944540500641,
+  "sgjm_metrics": {
+    "n_tokens": 65536,
+    "n_positions": 64512,
+    "token_nll": 0.09893078543245792,
+    "token_ppl": 1.1039898847319602,
+    "branch_acceptance_rate": 0.6417410714285714,
+    "jepa_top1_acc": 0.9705481150793651,
+    "jepa_chance_top1": 0.1111111111111111,
+    "merge_precision_js": 0.5752888917922974,
+    "random_pair_js": 0.6892742365154193,
+    "merge_precision_advantage": 1.1981358346204176,
+    "compute_per_accepted_token": 2950436.4521739134
+  },
+  "baseline_metrics": {
+    "n_tokens": 65536,
+    "token_nll": 0.08837741566821933,
+    "token_ppl": 1.0924003332375518,
+    "compute_per_token": 26354304.0
+  },
+  "comparison": {
+    "sgjm": {
+      "n_tokens": 65536,
+      "n_positions": 64512,
+      "token_nll": 0.09893078543245792,
+      "token_ppl": 1.1039898847319602,
+      "branch_acceptance_rate": 0.6417410714285714,
+      "jepa_top1_acc": 0.9705481150793651,
+      "jepa_chance_top1": 0.1111111111111111,
+      "merge_precision_js": 0.5752888917922974,
+      "random_pair_js": 0.6892742365154193,
+      "merge_precision_advantage": 1.1981358346204176,
+      "compute_per_accepted_token": 2950436.4521739134
+    },
+    "baseline": {
+      "n_tokens": 65536,
+      "token_nll": 0.08837741566821933,
+      "token_ppl": 1.0924003332375518,
+      "compute_per_token": 26354304.0
+    },
+    "nll_delta": 0.010553369764238596,
+    "compute_advantage": 8.932340834042321,
+    "gate_passed": false,
+    "gate_reasons": [
+      "merge_precision_advantage=1.20 < 1.5"
+    ]
+  },
+  "error": null
+}

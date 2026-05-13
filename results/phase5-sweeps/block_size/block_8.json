@@ -1,0 +1,60 @@
+{
+  "card": {
+    "name": "block_8",
+    "hypothesis": "block_size=8 hits the compute/acceptance tradeoff sweet spot.",
+    "overrides": {
+      "model.block_size": 8
+    },
+    "expected_signal": "Larger blocks = higher compute/accepted, lower acceptance.",
+    "arch": "sgjm",
+    "pair_with_baseline": true
+  },
+  "elapsed_sec": 513.9342000484467,
+  "sgjm_metrics": {
+    "n_tokens": 65536,
+    "n_positions": 63488,
+    "token_nll": 0.10067431721836329,
+    "token_ppl": 1.1059164051740857,
+    "branch_acceptance_rate": 0.9079038558467742,
+    "jepa_top1_acc": 0.9606067288306451,
+    "jepa_chance_top1": 0.1111111111111111,
+    "merge_precision_js": NaN,
+    "random_pair_js": 0.6894535740149794,
+    "merge_precision_advantage": 1.0,
+    "compute_per_accepted_token": 1042846.2429173678
+  },
+  "baseline_metrics": {
+    "n_tokens": 65536,
+    "token_nll": 0.08837766712531447,
+    "token_ppl": 1.0924006079294009,
+    "compute_per_token": 26354304.0
+  },
+  "comparison": {
+    "sgjm": {
+      "n_tokens": 65536,
+      "n_positions": 63488,
+      "token_nll": 0.10067431721836329,
+      "token_ppl": 1.1059164051740857,
+      "branch_acceptance_rate": 0.9079038558467742,
+      "jepa_top1_acc": 0.9606067288306451,
+      "jepa_chance_top1": 0.1111111111111111,
+      "merge_precision_js": NaN,
+      "random_pair_js": 0.6894535740149794,
+      "merge_precision_advantage": 1.0,
+      "compute_per_accepted_token": 1042846.2429173678
+    },
+    "baseline": {
+      "n_tokens": 65536,
+      "token_nll": 0.08837766712531447,
+      "token_ppl": 1.0924006079294009,
+      "compute_per_token": 26354304.0
+    },
+    "nll_delta": 0.012296650093048811,
+    "compute_advantage": 25.27151454875428,
+    "gate_passed": false,
+    "gate_reasons": [
+      "merge_precision_advantage=1.00 < 1.5"
+    ]
+  },
+  "error": null
+}
