@@ -18,7 +18,8 @@ def _build_config(args: argparse.Namespace) -> TrainingConfig:
     else:
         raise ValueError(f"unknown --size {args.size!r}")
 
-    overrides: dict = {}
+    if args.arch:
+        cfg.arch = args.arch
     if args.steps is not None:
         cfg.optim.max_steps = args.steps
     if args.batch_size is not None:
@@ -29,6 +30,8 @@ def _build_config(args: argparse.Namespace) -> TrainingConfig:
         cfg.optim.lr = args.lr
     if args.checkpoint_dir:
         cfg.checkpoint_dir = args.checkpoint_dir
+    elif cfg.checkpoint_dir == TrainingConfig().checkpoint_dir and cfg.arch != "sgjm":
+        cfg.checkpoint_dir = f"runs/{cfg.arch}-25m"
     if args.data_path:
         cfg.data_path = args.data_path
     if args.amp:
@@ -39,12 +42,14 @@ def _build_config(args: argparse.Namespace) -> TrainingConfig:
         cfg.seed = args.seed
     if args.backend:
         cfg.backend = args.backend
-    return cfg.with_overrides(**overrides)
+    return cfg
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m sgjm.training")
     parser.add_argument("--backend", choices=["auto", "cuda", "rocm", "mlx", "cpu"], default="auto")
+    parser.add_argument("--arch", choices=["sgjm", "baseline"], default=None,
+                        help="model architecture (default: from config / sgjm)")
     parser.add_argument("--size", choices=["smoke", "25m"], default="25m")
     parser.add_argument("--config", type=str, default=None, help="path to config JSON")
     parser.add_argument("--steps", type=int, default=None)
