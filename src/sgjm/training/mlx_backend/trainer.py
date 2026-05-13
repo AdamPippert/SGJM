@@ -21,7 +21,7 @@ from sgjm.training.mlx_backend.model import SGJM
 
 @dataclass
 class TrainResult:
-    model: SGJM
+    model: nn.Module
     final_step: int
     best_eval: float
     checkpoint_path: Path | None
@@ -58,6 +58,40 @@ def evaluate(
     return {k: v / n_batches for k, v in sums.items()}
 
 
+def _baseline_loss(
+    model: nn.Module,
+    x: mx.array,
+    y: mx.array,
+) -> tuple[mx.array, dict[str, mx.array]]:
+    """Compute token cross-entropy loss for BaselineLM."""
+    _, logits = model(x)
+    V = logits.shape[-1]
+    token_loss = nn.losses.cross_entropy(
+        logits.reshape(-1, V), y.reshape(-1), reduction="mean"
+    )
+    return token_loss, {"total": token_loss, "token": token_loss}
+
+
+def _evaluate_baseline(
+    model: nn.Module,
+    cfg: TrainingConfig,
+    dataset: ByteDataset,
+    rng: random.Random,
+    n_batches: int,
+) -> dict[str, float]:
+    sums: dict[str, float] = {}
+    model.eval()
+    for _ in range(n_batches):
+        xs, ys = dataset.batch(cfg.optim.batch_size, rng)
+        x, y = _to_array(xs), _to_array(ys)
+        _, parts = _baseline_loss(model, x, y)
+        mx.eval(parts)
+        for k, v in parts.items():
+            sums[k] = sums.get(k, 0.0) + float(v)
+    model.train()
+    return {k: v / n_batches for k, v in sums.items()}
+
+
 def train(
     cfg: TrainingConfig,
     backend: ResolvedBackend,
@@ -75,10 +109,18 @@ def train(
     train_set = ByteDataset(corpus[:split], cfg.optim.seq_len)
     eval_set = ByteDataset(corpus[split:], cfg.optim.seq_len)
 
-    model = SGJM(cfg.model)
+    arch = cfg.arch
+    if arch == "baseline":
+        from sgjm.training.mlx_backend.baseline import BaselineLM
+        model: nn.Module = BaselineLM(cfg.model)
+        n_params = model.num_parameters()
+        print(f"[baseline] backend=mlx params={n_params/1e6:.2f}M")
+    else:
+        model = SGJM(cfg.model)
+        n_params = model.num_parameters()
+        print(f"[sgjm] backend=mlx params={n_params/1e6:.2f}M")
+
     mx.eval(model.parameters())
-    n_params = model.num_parameters()
-    print(f"[sgjm] backend=mlx params={n_params/1e6:.2f}M")
 
     optimizer = optim.AdamW(
         learning_rate=cfg.optim.lr,
@@ -91,8 +133,16 @@ def train(
     cfg.save_json(out_dir / "config.json")
     log_file = (out_dir / "train.jsonl").open("a", buffering=1)
 
-    def loss_fn(model: SGJM, x: mx.array, y: mx.array) -> tuple[mx.array, dict[str, mx.array]]:
-        return compute_losses(model, x, y, cfg)
+    if arch == "baseline":
+        def loss_fn(
+            m: nn.Module, x: mx.array, y: mx.array
+        ) -> tuple[mx.array, dict[str, mx.array]]:
+            return _baseline_loss(m, x, y)
+    else:
+        def loss_fn(
+            m: nn.Module, x: mx.array, y: mx.array
+        ) -> tuple[mx.array, dict[str, mx.array]]:
+            return compute_losses(m, x, y, cfg)
 
     loss_and_grad = nn.value_and_grad(model, loss_fn)
 
@@ -127,29 +177,39 @@ def train(
         mx.eval(model.parameters(), optimizer.state, parts)
 
         if step % cfg.log_every == 0 or step == cfg.optim.max_steps - 1:
-            entry = {
+            entry: dict[str, object] = {
                 "step": step,
                 "lr": lr,
                 "elapsed": time.time() - t0,
                 **{k: float(v) for k, v in parts.items()},
             }
             log_file.write(json.dumps(entry) + "\n")
-            print(
-                f"[sgjm] step={step:>6} lr={lr:.2e} "
-                f"total={float(parts['total']):.4f} "
-                f"tok={float(parts['token']):.4f} "
-                f"draft={float(parts['drafter']):.4f} "
-                f"jepa={float(parts['jepa']):.4f} "
-                f"ver={float(parts['verifier']):.4f} "
-                f"acc={float(parts['accept_acc']):.3f}"
-            )
+            if arch == "baseline":
+                print(
+                    f"[baseline] step={step:>6} lr={lr:.2e} "
+                    f"total={float(parts['total']):.4f} "
+                    f"tok={float(parts['token']):.4f}"
+                )
+            else:
+                print(
+                    f"[sgjm] step={step:>6} lr={lr:.2e} "
+                    f"total={float(parts['total']):.4f} "
+                    f"tok={float(parts['token']):.4f} "
+                    f"draft={float(parts['drafter']):.4f} "
+                    f"jepa={float(parts['jepa']):.4f} "
+                    f"ver={float(parts['verifier']):.4f} "
+                    f"acc={float(parts['accept_acc']):.3f}"
+                )
             if progress is not None:
                 progress(step, entry)
 
         if cfg.eval_every and step > 0 and step % cfg.eval_every == 0:
-            eval_metrics = evaluate(model, cfg, eval_set, eval_rng, cfg.optim.eval_batches)
+            if arch == "baseline":
+                eval_metrics = _evaluate_baseline(model, cfg, eval_set, eval_rng, cfg.optim.eval_batches)
+            else:
+                eval_metrics = evaluate(model, cfg, eval_set, eval_rng, cfg.optim.eval_batches)
             log_file.write(json.dumps({"step": step, "eval": eval_metrics}) + "\n")
-            print(f"[sgjm] eval@{step}: {eval_metrics}")
+            print(f"[{arch}] eval@{step}: {eval_metrics}")
             if eval_metrics["total"] < best_eval:
                 best_eval = eval_metrics["total"]
                 best_path = _save(step, "best")

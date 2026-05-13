@@ -6,14 +6,14 @@ from pathlib import Path
 
 from sgjm.research.runner import run_sweep
 from sgjm.research.sweep import available_sweeps, get_sweep
-from sgjm.training.backends import is_torch_backend, resolve_backend
+from sgjm.training.backends import resolve_backend
 from sgjm.training.config import TrainingConfig
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m sgjm.research")
     parser.add_argument("--sweep", required=True, help=f"one of: {available_sweeps()}")
-    parser.add_argument("--backend", choices=["auto", "cuda", "rocm", "cpu"], default="auto")
+    parser.add_argument("--backend", choices=["auto", "cuda", "rocm", "cpu", "mlx"], default="auto")
     parser.add_argument("--size", choices=["smoke", "25m"], default="smoke",
                         help="base config size (each entry overrides on top)")
     parser.add_argument("--config", type=str, default=None, help="path to base config JSON")
@@ -28,8 +28,6 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     backend = resolve_backend(args.backend)
-    if not is_torch_backend(backend):
-        raise SystemExit(f"research runner requires a torch backend, got {backend!r}")
 
     if args.config:
         base_cfg = TrainingConfig.load_json(args.config)
