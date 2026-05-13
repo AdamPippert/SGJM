@@ -6,19 +6,26 @@ import random
 import time
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Callable
 
 import torch
+import torch.nn as nn
 
 from sgjm.training.backends import ResolvedBackend, torch_device
 from sgjm.training.config import TrainingConfig
 from sgjm.training.data import ByteDataset, load_corpus
+from sgjm.training.torch_backend.baseline import BaselineLM, compute_baseline_losses
 from sgjm.training.torch_backend.losses import compute_losses
 from sgjm.training.torch_backend.model import SGJM
 
 
+LossFn = Callable[[nn.Module, tuple[torch.Tensor, torch.Tensor], TrainingConfig],
+                  tuple[torch.Tensor, dict[str, torch.Tensor]]]
+
+
 @dataclass
 class TrainResult:
-    model: SGJM
+    model: nn.Module
     final_step: int
     best_eval: float
     checkpoint_path: Path | None
@@ -34,11 +41,8 @@ def _amp_dtype(cfg: TrainingConfig, backend: ResolvedBackend) -> torch.dtype | N
         return torch.float16
     if mode == "bf16":
         return torch.bfloat16
-    # auto
     if backend == "cuda":
-        if torch.cuda.is_bf16_supported():
-            return torch.bfloat16
-        return torch.float16
+        return torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
     if backend == "rocm":
         return torch.bfloat16
     return None
@@ -61,9 +65,18 @@ def _to_device(
     return x, y
 
 
+def _make_model_and_loss(cfg: TrainingConfig) -> tuple[nn.Module, LossFn, str]:
+    if cfg.arch == "sgjm":
+        return SGJM(cfg.model), compute_losses, "sgjm"
+    if cfg.arch == "baseline":
+        return BaselineLM(cfg.model), compute_baseline_losses, "baseline"
+    raise ValueError(f"unknown arch {cfg.arch!r}")
+
+
 @torch.no_grad()
 def evaluate(
-    model: SGJM,
+    model: nn.Module,
+    loss_fn: LossFn,
     cfg: TrainingConfig,
     dataset: ByteDataset,
     rng: random.Random,
@@ -76,7 +89,7 @@ def evaluate(
     for _ in range(n_batches):
         xs, ys = dataset.batch(cfg.optim.batch_size, rng)
         x, y = _to_device(xs, ys, device)
-        _, parts = compute_losses(model, (x, y), cfg)
+        _, parts = loss_fn(model, (x, y), cfg)
         for k, v in parts.items():
             sums[k] = sums.get(k, 0.0) + float(v)
     if was_training:
@@ -87,7 +100,7 @@ def evaluate(
 def train(
     cfg: TrainingConfig,
     backend: ResolvedBackend,
-    progress: callable | None = None,
+    progress: Callable | None = None,
 ) -> TrainResult:
     if backend not in ("cuda", "rocm", "cpu"):
         raise ValueError(f"torch trainer cannot run on backend {backend!r}")
@@ -105,14 +118,19 @@ def train(
     train_set = ByteDataset(corpus[:split], cfg.optim.seq_len)
     eval_set = ByteDataset(corpus[split:], cfg.optim.seq_len)
 
-    model = SGJM(cfg.model).to(device)
-    breakdown = model.param_breakdown()
-    total_params = sum(breakdown.values())
-    print(
-        f"[sgjm] backend={backend} device={device} "
-        f"params={total_params/1e6:.2f}M "
-        + " ".join(f"{k}={v/1e6:.2f}M" for k, v in breakdown.items())
-    )
+    model, loss_fn, arch_tag = _make_model_and_loss(cfg)
+    model = model.to(device)
+    n_params = sum(p.numel() for p in model.parameters())
+    tag = f"sgjm:{arch_tag}"
+    if hasattr(model, "param_breakdown"):
+        breakdown = model.param_breakdown()
+        print(
+            f"[{tag}] backend={backend} device={device} "
+            f"params={n_params/1e6:.2f}M "
+            + " ".join(f"{k}={v/1e6:.2f}M" for k, v in breakdown.items())
+        )
+    else:
+        print(f"[{tag}] backend={backend} device={device} params={n_params/1e6:.2f}M")
 
     if cfg.compile:
         model = torch.compile(model)  # type: ignore[assignment]
@@ -131,14 +149,14 @@ def train(
     out_dir = Path(cfg.checkpoint_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     cfg.save_json(out_dir / "config.json")
-    log_path = out_dir / "train.jsonl"
-    log_file = log_path.open("a", buffering=1)
+    log_file = (out_dir / "train.jsonl").open("a", buffering=1)
 
     def _save(step: int, name: str) -> Path:
         path = out_dir / f"{name}.pt"
         torch.save(
             {
                 "step": step,
+                "arch": cfg.arch,
                 "model": model.state_dict(),
                 "optimizer": optimizer.state_dict(),
                 "config": cfg.to_dict(),
@@ -164,9 +182,9 @@ def train(
         optimizer.zero_grad(set_to_none=True)
         if amp_dtype is not None:
             with torch.amp.autocast(device_type="cuda", dtype=amp_dtype):
-                total, parts = compute_losses(model, (x, y), cfg)
+                total, parts = loss_fn(model, (x, y), cfg)
         else:
-            total, parts = compute_losses(model, (x, y), cfg)
+            total, parts = loss_fn(model, (x, y), cfg)
 
         if use_grad_scaler:
             scaler.scale(total).backward()
@@ -187,25 +205,17 @@ def train(
                 **{k: float(v) for k, v in parts.items()},
             }
             log_file.write(json.dumps(entry) + "\n")
-            print(
-                f"[sgjm] step={step:>6} lr={lr:.2e} "
-                f"total={float(parts['total']):.4f} "
-                f"tok={float(parts['token']):.4f} "
-                f"draft={float(parts['drafter']):.4f} "
-                f"jepa={float(parts['jepa']):.4f} "
-                f"ver={float(parts['verifier']):.4f} "
-                f"acc={float(parts['accept_acc']):.3f}"
-            )
+            parts_str = " ".join(f"{k}={float(v):.4f}" for k, v in parts.items())
+            print(f"[{tag}] step={step:>6} lr={lr:.2e} {parts_str}")
             if progress is not None:
                 progress(step, entry)
 
         if cfg.eval_every and step > 0 and step % cfg.eval_every == 0:
             eval_metrics = evaluate(
-                model, cfg, eval_set, eval_rng, device, cfg.optim.eval_batches
+                model, loss_fn, cfg, eval_set, eval_rng, device, cfg.optim.eval_batches
             )
-            entry = {"step": step, "eval": eval_metrics}
-            log_file.write(json.dumps(entry) + "\n")
-            print(f"[sgjm] eval@{step}: {eval_metrics}")
+            log_file.write(json.dumps({"step": step, "eval": eval_metrics}) + "\n")
+            print(f"[{tag}] eval@{step}: {eval_metrics}")
             if eval_metrics["total"] < best_eval:
                 best_eval = eval_metrics["total"]
                 best_path = _save(step, "best")

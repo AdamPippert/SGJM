@@ -23,6 +23,9 @@ class ModelConfig:
     verifier_hidden: int = 256
     dropout: float = 0.0
     tie_embeddings: bool = True
+    # Baseline backbone is sized to match the SGJM *total* (backbone + drafter
+    # + judge + verifier) so comparisons are at equal parameter budget.
+    baseline_n_layers: int = 11
 
     def head_dim(self) -> int:
         if self.d_model % self.n_heads:
@@ -54,6 +57,7 @@ class LossWeights:
 @dataclass
 class TrainingConfig:
     backend: str = "auto"
+    arch: str = "sgjm"  # "sgjm" | "baseline"
     seed: int = 42
     model: ModelConfig = field(default_factory=ModelConfig)
     optim: OptimConfig = field(default_factory=OptimConfig)
@@ -87,6 +91,7 @@ class TrainingConfig:
                 verifier_hidden=64,
                 block_size=2,
                 max_seq_len=64,
+                baseline_n_layers=3,
             ),
             optim=OptimConfig(
                 batch_size=4,
