@@ -143,6 +143,28 @@ Best eval total loss: **0.1790** at step 4500. Token loss: **0.0254**. Accept ac
 
 Full training log: [`results/sgjm-25m-mlx-run1/train.jsonl`](results/sgjm-25m-mlx-run1/train.jsonl)
 
+### Run 2 — 100M, MLX, Apple Silicon, 2026-05-13
+
+| | |
+|--|--|
+| **Host** | MacBook Pro (arm64) |
+| **Backend** | MLX 0.29.1 / Python 3.12 |
+| **Duration** | 55.4 min |
+| **Steps** | 5 000 |
+| **Params** | ~93M (d_model=768, 9 layers) |
+| **Data** | TinyShakespeare (1 MiB, byte-level) |
+
+| Step | Total | Token | Accept Acc |
+|------|------:|------:|-----------:|
+| 1 000 | 2.338 | 0.430 | 92.9% |
+| 2 000 | 0.388 | 0.081 | 99.5% |
+| 3 000 | 0.229 | 0.038 | 99.8% |
+| 4 000 | 0.176 | 0.027 | 99.8% |
+| **4 500** | **0.167** | **0.024** | **99.9%** |
+
+**Scaling return**: +272% parameters, +103% training time, −6.9% eval loss vs 25M.  
+Full log: [`results/sgjm-100m-mlx-run1/`](results/sgjm-100m-mlx-run1/)
+
 ---
 
 ## Phase 5 Results — Gate Run & Ablation
