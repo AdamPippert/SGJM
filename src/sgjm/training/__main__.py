@@ -15,6 +15,8 @@ def _build_config(args: argparse.Namespace) -> TrainingConfig:
         cfg = TrainingConfig.smoke()
     elif args.size == "25m":
         cfg = TrainingConfig.sgjm_25m()
+    elif args.size == "100m":
+        cfg = TrainingConfig.sgjm_100m()
     else:
         raise ValueError(f"unknown --size {args.size!r}")
 
@@ -52,7 +54,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--backend", choices=["auto", "cuda", "rocm", "mlx", "cpu"], default="auto")
     parser.add_argument("--arch", choices=["sgjm", "baseline"], default=None,
                         help="model architecture (default: from config / sgjm)")
-    parser.add_argument("--size", choices=["smoke", "25m"], default="25m")
+    parser.add_argument("--size", choices=["smoke", "25m", "100m"], default="25m")
     parser.add_argument("--config", type=str, default=None, help="path to config JSON")
     parser.add_argument("--steps", type=int, default=None)
     parser.add_argument("--batch-size", type=int, default=None)
