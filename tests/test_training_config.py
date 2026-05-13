@@ -42,3 +42,18 @@ def test_resolve_backend_explicit():
 
 def test_resolve_backend_auto_returns_known():
     assert resolve_backend("auto") in {"cpu", "cuda", "rocm", "mlx"}
+
+
+def test_100m_config_is_sane():
+    cfg = TrainingConfig.sgjm_100m()
+    assert cfg.model.d_model % cfg.model.n_heads == 0
+    assert cfg.model.drafter_d_model % cfg.model.drafter_heads == 0
+    assert cfg.optim.seq_len <= cfg.model.max_seq_len
+    assert cfg.checkpoint_dir == "runs/sgjm-100m"
+
+
+def test_100m_smoke_config_is_tiny():
+    cfg = TrainingConfig.sgjm_100m_smoke()
+    assert cfg.optim.max_steps <= 8
+    assert cfg.model.d_model <= 128
+    assert cfg.checkpoint_dir == "runs/sgjm-100m-smoke"

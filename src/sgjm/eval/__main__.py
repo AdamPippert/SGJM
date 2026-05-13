@@ -17,9 +17,9 @@ def _format_metric(name: str, value: float, fmt: str = ".4f") -> str:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m sgjm.eval")
-    parser.add_argument("--sgjm", required=True, help="path to trained SGJM checkpoint (.pt)")
-    parser.add_argument("--baseline", required=True, help="path to trained baseline checkpoint (.pt)")
-    parser.add_argument("--backend", choices=["auto", "cuda", "rocm", "cpu"], default="auto")
+    parser.add_argument("--sgjm", required=True, help="path to trained SGJM checkpoint (.pt or .safetensors)")
+    parser.add_argument("--baseline", required=True, help="path to trained baseline checkpoint (.pt or .safetensors)")
+    parser.add_argument("--backend", choices=["auto", "cuda", "rocm", "cpu", "mlx"], default="auto")
     parser.add_argument("--batches", type=int, default=32)
     parser.add_argument("--n-distractors", type=int, default=8)
     parser.add_argument("--n-merge-pairs", type=int, default=4096)
@@ -33,48 +33,93 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     backend = resolve_backend(args.backend)
+
     if not is_torch_backend(backend):
-        raise SystemExit(f"eval driver requires a torch backend, got {backend!r}")
-    device = torch_device(backend)
+        # MLX path
+        from sgjm.eval.checkpoint import load_mlx_checkpoint
+        from sgjm.eval.mlx_metrics import evaluate_baseline as mlx_eval_baseline
+        from sgjm.eval.mlx_metrics import evaluate_sgjm as mlx_eval_sgjm
 
-    sgjm_ckpt = load_checkpoint(args.sgjm, device=device)
-    base_ckpt = load_checkpoint(args.baseline, device=device)
-    if sgjm_ckpt.arch != "sgjm":
-        raise SystemExit(f"--sgjm checkpoint has arch {sgjm_ckpt.arch!r}, expected sgjm")
-    if base_ckpt.arch != "baseline":
-        raise SystemExit(f"--baseline checkpoint has arch {base_ckpt.arch!r}, expected baseline")
+        sgjm_ckpt = load_mlx_checkpoint(args.sgjm)
+        base_ckpt = load_mlx_checkpoint(args.baseline)
+        if sgjm_ckpt.arch != "sgjm":
+            raise SystemExit(f"--sgjm checkpoint has arch {sgjm_ckpt.arch!r}, expected sgjm")
+        if base_ckpt.arch != "baseline":
+            raise SystemExit(f"--baseline checkpoint has arch {base_ckpt.arch!r}, expected baseline")
 
-    cfg = sgjm_ckpt.config
-    data_path = args.data_path or cfg.data_path
-    corpus = load_corpus(data_path, cfg.corpus_bytes, seed=cfg.seed)
-    split = int(0.95 * len(corpus))
-    eval_set = ByteDataset(corpus[split:], cfg.optim.seq_len)
+        cfg = sgjm_ckpt.config
+        data_path = args.data_path or cfg.data_path
+        corpus = load_corpus(data_path, cfg.corpus_bytes, seed=cfg.seed)
+        split = int(0.95 * len(corpus))
+        eval_set = ByteDataset(corpus[split:], cfg.optim.seq_len)
 
-    print(
-        f"[eval] backend={backend} device={device} batches={args.batches} "
-        f"sgjm@step={sgjm_ckpt.step} baseline@step={base_ckpt.step}"
-    )
+        print(
+            f"[eval] backend={backend} batches={args.batches} "
+            f"sgjm@step={sgjm_ckpt.step} baseline@step={base_ckpt.step}"
+        )
 
-    sgjm_metrics = evaluate_sgjm(
-        sgjm_ckpt.model,
-        cfg,
-        eval_set,
-        n_batches=args.batches,
-        n_distractors=args.n_distractors,
-        n_merge_pairs=args.n_merge_pairs,
-        merge_radius_bits=args.merge_radius_bits,
-        drafts_per_step=args.drafts_per_step,
-        device=device,
-        seed=args.seed,
-    )
-    baseline_metrics = evaluate_baseline(
-        base_ckpt.model,
-        cfg,
-        eval_set,
-        n_batches=args.batches,
-        device=device,
-        seed=args.seed,
-    )
+        from sgjm.training.mlx_backend.model import SGJM as MlxSGJM
+        from sgjm.training.mlx_backend.baseline import BaselineLM as MlxBaselineLM
+        sgjm_metrics = mlx_eval_sgjm(
+            sgjm_ckpt.model,  # type: ignore[arg-type]
+            cfg,
+            eval_set,
+            n_batches=args.batches,
+            n_distractors=args.n_distractors,
+            n_merge_pairs=args.n_merge_pairs,
+            merge_radius_bits=args.merge_radius_bits,
+            drafts_per_step=args.drafts_per_step,
+            seed=args.seed,
+        )
+        baseline_metrics = mlx_eval_baseline(
+            base_ckpt.model,  # type: ignore[arg-type]
+            cfg,
+            eval_set,
+            n_batches=args.batches,
+            seed=args.seed,
+        )
+    else:
+        device = torch_device(backend)
+
+        sgjm_ckpt = load_checkpoint(args.sgjm, device=device)
+        base_ckpt = load_checkpoint(args.baseline, device=device)
+        if sgjm_ckpt.arch != "sgjm":
+            raise SystemExit(f"--sgjm checkpoint has arch {sgjm_ckpt.arch!r}, expected sgjm")
+        if base_ckpt.arch != "baseline":
+            raise SystemExit(f"--baseline checkpoint has arch {base_ckpt.arch!r}, expected baseline")
+
+        cfg = sgjm_ckpt.config
+        data_path = args.data_path or cfg.data_path
+        corpus = load_corpus(data_path, cfg.corpus_bytes, seed=cfg.seed)
+        split = int(0.95 * len(corpus))
+        eval_set = ByteDataset(corpus[split:], cfg.optim.seq_len)
+
+        print(
+            f"[eval] backend={backend} device={device} batches={args.batches} "
+            f"sgjm@step={sgjm_ckpt.step} baseline@step={base_ckpt.step}"
+        )
+
+        sgjm_metrics = evaluate_sgjm(
+            sgjm_ckpt.model,  # type: ignore[arg-type]
+            cfg,
+            eval_set,
+            n_batches=args.batches,
+            n_distractors=args.n_distractors,
+            n_merge_pairs=args.n_merge_pairs,
+            merge_radius_bits=args.merge_radius_bits,
+            drafts_per_step=args.drafts_per_step,
+            device=device,
+            seed=args.seed,
+        )
+        baseline_metrics = evaluate_baseline(
+            base_ckpt.model,  # type: ignore[arg-type]
+            cfg,
+            eval_set,
+            n_batches=args.batches,
+            device=device,
+            seed=args.seed,
+        )
+
     report = compare(sgjm_metrics, baseline_metrics)
 
     print("--- SGJM ---")

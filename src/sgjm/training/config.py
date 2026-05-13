@@ -77,6 +77,70 @@ class TrainingConfig:
         return cls()
 
     @classmethod
+    def sgjm_100m(cls) -> "TrainingConfig":
+        return cls(
+            model=ModelConfig(
+                d_model=768,
+                n_layers=9,
+                n_heads=12,
+                d_ff=3072,
+                drafter_layers=2,
+                drafter_d_model=384,
+                drafter_heads=6,
+                drafter_d_ff=1536,
+                judge_hidden=1024,
+                verifier_hidden=512,
+                block_size=4,
+                max_seq_len=1024,
+                baseline_n_layers=10,
+            ),
+            optim=OptimConfig(
+                lr=1.5e-4,
+                batch_size=4,
+                seq_len=512,
+                max_steps=20000,
+                warmup_steps=1000,
+                eval_batches=8,
+            ),
+            checkpoint_dir="runs/sgjm-100m",
+        )
+
+    @classmethod
+    def sgjm_100m_smoke(cls) -> "TrainingConfig":
+        """Fast smoke-test variant that exercises the 100M config class."""
+        return cls(
+            model=ModelConfig(
+                d_model=64,
+                n_layers=2,
+                n_heads=4,
+                d_ff=256,
+                drafter_layers=1,
+                drafter_d_model=32,
+                drafter_heads=4,
+                drafter_d_ff=128,
+                judge_hidden=64,
+                verifier_hidden=64,
+                block_size=4,
+                max_seq_len=128,
+                baseline_n_layers=3,
+            ),
+            optim=OptimConfig(
+                lr=1.5e-4,
+                batch_size=4,
+                seq_len=64,
+                max_steps=4,
+                warmup_steps=1,
+                eval_batches=2,
+            ),
+            log_every=1,
+            eval_every=1000,
+            checkpoint_every=1000,
+            corpus_bytes=8192,
+            checkpoint_dir="runs/sgjm-100m-smoke",
+            amp="off",
+        )
+
+    @classmethod
     def smoke(cls) -> "TrainingConfig":
         return cls(
             model=ModelConfig(
