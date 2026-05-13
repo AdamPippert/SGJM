@@ -1,0 +1,63 @@
+{
+  "card": {
+    "name": "sgjm_no_jepa",
+    "hypothesis": "JEPA pruning is unnecessary; verifier alone is enough.",
+    "overrides": {
+      "loss.jepa": 0.0
+    },
+    "expected_signal": "jepa_top1_acc drops to chance; branch_acceptance flat.",
+    "arch": "sgjm",
+    "pair_with_baseline": true
+  },
+  "elapsed_sec": 433.9900426864624,
+  "sgjm_metrics": {
+    "n_tokens": 65536,
+    "n_positions": 64512,
+    "token_nll": 0.09915689704939723,
+    "token_ppl": 1.104239537893558,
+    "branch_acceptance_rate": 0.02683221726190476,
+    "jepa_top1_acc": 0.11546688988095238,
+    "jepa_chance_top1": 0.1111111111111111,
+    "merge_precision_js": 0.6183551251888275,
+    "random_pair_js": 0.6893096806704325,
+    "merge_precision_advantage": 1.1147472586403122,
+    "compute_per_accepted_token": 70565031.26516464
+  },
+  "baseline_metrics": {
+    "n_tokens": 65536,
+    "token_nll": 0.08837755443528295,
+    "token_ppl": 1.0924004848267488,
+    "compute_per_token": 26354304.0
+  },
+  "comparison": {
+    "sgjm": {
+      "n_tokens": 65536,
+      "n_positions": 64512,
+      "token_nll": 0.09915689704939723,
+      "token_ppl": 1.104239537893558,
+      "branch_acceptance_rate": 0.02683221726190476,
+      "jepa_top1_acc": 0.11546688988095238,
+      "jepa_chance_top1": 0.1111111111111111,
+      "merge_precision_js": 0.6183551251888275,
+      "random_pair_js": 0.6893096806704325,
+      "merge_precision_advantage": 1.1147472586403122,
+      "compute_per_accepted_token": 70565031.26516464
+    },
+    "baseline": {
+      "n_tokens": 65536,
+      "token_nll": 0.08837755443528295,
+      "token_ppl": 1.0924004848267488,
+      "compute_per_token": 26354304.0
+    },
+    "nll_delta": 0.010779342614114285,
+    "compute_advantage": 0.37347541023495795,
+    "gate_passed": false,
+    "gate_reasons": [
+      "branch_acceptance_rate=0.027 < 0.5",
+      "jepa_top1_acc=0.115 not meaningfully above chance=0.111",
+      "merge_precision_advantage=1.11 < 1.5",
+      "compute_advantage=0.37 < 1.0"
+    ]
+  },
+  "error": null
+}
