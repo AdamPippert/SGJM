@@ -2,7 +2,42 @@ from __future__ import annotations
 
 import os
 import random
+import urllib.error
+import urllib.request
 from dataclasses import dataclass
+from pathlib import Path
+
+
+TINYSHAKESPEARE_URL = (
+    "https://raw.githubusercontent.com/karpathy/char-rnn/master/data/"
+    "tinyshakespeare/input.txt"
+)
+
+
+def _cache_dir() -> Path:
+    base = os.environ.get("SGJM_CACHE_DIR")
+    if base:
+        path = Path(base)
+    else:
+        path = Path.home() / ".cache" / "sgjm"
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def download_tinyshakespeare(force: bool = False) -> Path:
+    target = _cache_dir() / "tinyshakespeare.txt"
+    if target.exists() and not force:
+        return target
+    try:
+        with urllib.request.urlopen(TINYSHAKESPEARE_URL, timeout=30) as resp:
+            data = resp.read()
+    except (urllib.error.URLError, TimeoutError) as e:
+        raise RuntimeError(
+            f"failed to download tinyshakespeare from {TINYSHAKESPEARE_URL}: {e}. "
+            "Pre-download it manually and pass --data-path."
+        ) from e
+    target.write_bytes(data)
+    return target
 
 
 def synthetic_corpus(n_bytes: int = 1 << 20, seed: int = 0) -> bytes:
@@ -23,7 +58,31 @@ def synthetic_corpus(n_bytes: int = 1 << 20, seed: int = 0) -> bytes:
     return bytes(out)
 
 
-def load_corpus(path: str | None = None, n_bytes: int = 1 << 20, seed: int = 0) -> bytes:
+def load_corpus(
+    path: str | None = None,
+    n_bytes: int = 1 << 20,
+    seed: int = 0,
+    source: str = "auto",
+) -> bytes:
+    """Load a byte corpus from `path`, a known source, or synthetic fallback.
+
+    source:
+      "auto"            — use path if given, else synthetic
+      "synthetic"       — always synthetic, ignore path
+      "tinyshakespeare" — download (and cache) Karpathy's tinyshakespeare
+      "file"            — require path; raise if missing
+    """
+    if source == "synthetic":
+        return synthetic_corpus(n_bytes, seed)
+    if source == "tinyshakespeare":
+        target = download_tinyshakespeare()
+        return target.read_bytes()
+    if source == "file":
+        if not path or not os.path.exists(path):
+            raise FileNotFoundError(f"data file not found: {path!r}")
+        with open(path, "rb") as f:
+            return f.read()
+    # auto
     if path and os.path.exists(path):
         with open(path, "rb") as f:
             return f.read()
