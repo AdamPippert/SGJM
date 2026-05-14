@@ -17,6 +17,8 @@ def _build_config(args: argparse.Namespace) -> TrainingConfig:
         cfg = TrainingConfig.sgjm_25m()
     elif args.size == "100m":
         cfg = TrainingConfig.sgjm_100m()
+    elif args.size == "250m":
+        cfg = TrainingConfig.sgjm_250m()
     else:
         raise ValueError(f"unknown --size {args.size!r}")
 
@@ -54,7 +56,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--backend", choices=["auto", "cuda", "rocm", "mlx", "cpu"], default="auto")
     parser.add_argument("--arch", choices=["sgjm", "baseline"], default=None,
                         help="model architecture (default: from config / sgjm)")
-    parser.add_argument("--size", choices=["smoke", "25m", "100m"], default="25m")
+    parser.add_argument("--size", choices=["smoke", "25m", "100m", "250m"], default="25m")
     parser.add_argument("--config", type=str, default=None, help="path to config JSON")
     parser.add_argument("--steps", type=int, default=None)
     parser.add_argument("--batch-size", type=int, default=None)
@@ -63,7 +65,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--checkpoint-dir", type=str, default=None)
     parser.add_argument("--data-path", type=str, default=None)
     parser.add_argument("--data-source",
-                        choices=["auto", "synthetic", "tinyshakespeare", "file", "python"],
+                        choices=["auto", "synthetic", "tinyshakespeare", "file",
+                                 "python", "python_extended"],
                         default=None)
     parser.add_argument("--amp", choices=["auto", "off", "bf16", "fp16"], default=None)
     parser.add_argument("--compile", action=argparse.BooleanOptionalAction, default=None)

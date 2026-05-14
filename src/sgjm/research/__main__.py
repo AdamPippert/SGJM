@@ -14,7 +14,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m sgjm.research")
     parser.add_argument("--sweep", required=True, help=f"one of: {available_sweeps()}")
     parser.add_argument("--backend", choices=["auto", "cuda", "rocm", "cpu", "mlx"], default="auto")
-    parser.add_argument("--size", choices=["smoke", "25m", "100m"], default="smoke",
+    parser.add_argument("--size", choices=["smoke", "25m", "100m", "250m"], default="smoke",
                         help="base config size (each entry overrides on top)")
     parser.add_argument("--config", type=str, default=None, help="path to base config JSON")
     parser.add_argument("--out-dir", type=str, required=True)
@@ -22,7 +22,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--steps", type=int, default=None,
                         help="override training steps per entry")
     parser.add_argument("--data-source",
-                        choices=["auto", "synthetic", "tinyshakespeare", "file", "python"],
+                        choices=["auto", "synthetic", "tinyshakespeare", "file",
+                                 "python", "python_extended"],
                         default=None)
     parser.add_argument("--data-path", type=str, default=None)
     parser.add_argument("--seed", type=int, default=None)
@@ -38,6 +39,8 @@ def main(argv: list[str] | None = None) -> int:
         base_cfg = TrainingConfig.sgjm_25m()
     elif args.size == "100m":
         base_cfg = TrainingConfig.sgjm_100m()
+    elif args.size == "250m":
+        base_cfg = TrainingConfig.sgjm_250m()
     else:
         raise SystemExit(f"unknown --size {args.size!r}")
 

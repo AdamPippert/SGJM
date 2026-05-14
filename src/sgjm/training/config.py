@@ -106,6 +106,71 @@ class TrainingConfig:
         )
 
     @classmethod
+    def sgjm_250m(cls) -> "TrainingConfig":
+        return cls(
+            model=ModelConfig(
+                d_model=1024,
+                n_layers=14,
+                n_heads=16,
+                d_ff=4096,
+                drafter_layers=2,
+                drafter_d_model=512,
+                drafter_heads=8,
+                drafter_d_ff=2048,
+                judge_hidden=2048,
+                verifier_hidden=1024,
+                block_size=4,
+                max_seq_len=1024,
+                baseline_n_layers=18,
+            ),
+            optim=OptimConfig(
+                lr=1e-4,
+                batch_size=4,
+                seq_len=512,
+                max_steps=10000,
+                warmup_steps=1000,
+                eval_batches=8,
+            ),
+            corpus_bytes=32 << 20,  # 32 MiB — large enough to avoid overfitting
+            checkpoint_dir="runs/sgjm-250m",
+        )
+
+    @classmethod
+    def sgjm_250m_smoke(cls) -> "TrainingConfig":
+        """Fast smoke-test variant of the 250M config."""
+        return cls(
+            model=ModelConfig(
+                d_model=128,
+                n_layers=2,
+                n_heads=4,
+                d_ff=512,
+                drafter_layers=1,
+                drafter_d_model=64,
+                drafter_heads=4,
+                drafter_d_ff=256,
+                judge_hidden=128,
+                verifier_hidden=64,
+                block_size=4,
+                max_seq_len=128,
+                baseline_n_layers=3,
+            ),
+            optim=OptimConfig(
+                lr=1e-3,
+                batch_size=4,
+                seq_len=64,
+                max_steps=4,
+                warmup_steps=1,
+                eval_batches=2,
+            ),
+            log_every=1,
+            eval_every=1000,
+            checkpoint_every=1000,
+            corpus_bytes=8192,
+            checkpoint_dir="runs/sgjm-250m-smoke",
+            amp="off",
+        )
+
+    @classmethod
     def sgjm_100m_smoke(cls) -> "TrainingConfig":
         """Fast smoke-test variant that exercises the 100M config class."""
         return cls(

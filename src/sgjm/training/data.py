@@ -68,21 +68,18 @@ def _python_stdlib_root() -> Path:
     return Path(sys.prefix) / "lib" / f"python{sys.version_info.major}.{sys.version_info.minor}"
 
 
-def load_python_corpus(path: str | None = None, n_bytes: int = 1 << 20) -> bytes:
-    """Collect .py files from `path` (or Python stdlib) into a single byte corpus."""
-    root = Path(path) if path else _python_stdlib_root()
-    if not root.is_dir():
-        raise FileNotFoundError(f"Python corpus directory not found: {root}")
+_EXCLUDE_PARTS = {"test", "tests", "__pycache__", ".egg-info", "dist-info"}
 
-    py_files = sorted(root.rglob("*.py"))
-    # Exclude test directories and cache
-    py_files = [
-        p for p in py_files
-        if not any(part in {"test", "tests", "__pycache__"} for part in p.parts)
-    ]
-    if not py_files:
-        raise ValueError(f"no .py files found under {root}")
 
+def _collect_py_files(root: Path) -> list[Path]:
+    """Return sorted .py files under root, excluding test and cache directories."""
+    return sorted(
+        p for p in root.rglob("*.py")
+        if not any(part in _EXCLUDE_PARTS for part in p.parts)
+    )
+
+
+def _assemble_corpus(py_files: list[Path], n_bytes: int) -> bytes:
     sep = b"\n# ---\n"
     chunks: list[bytes] = []
     total = 0
@@ -95,9 +92,61 @@ def load_python_corpus(path: str | None = None, n_bytes: int = 1 << 20) -> bytes
         total += len(chunk) + len(sep)
         if total >= n_bytes:
             break
+    return sep.join(chunks)[:n_bytes]
 
-    corpus = sep.join(chunks)
-    return corpus[:n_bytes]
+
+def _site_packages_root() -> Path | None:
+    """Return the site-packages directory for the active Python installation."""
+    import sysconfig
+    sp = sysconfig.get_path("purelib")
+    if sp and Path(sp).is_dir():
+        return Path(sp)
+    return None
+
+
+def load_python_corpus(
+    path: str | None = None,
+    n_bytes: int = 1 << 20,
+    extended: bool = False,
+) -> bytes:
+    """Collect .py files into a byte corpus.
+
+    If `path` is given: collect from that directory.
+    If `extended=True` (and no path): collect from Python stdlib + site-packages.
+    Otherwise: collect from Python stdlib only.
+    """
+    if path:
+        root = Path(path)
+        if not root.is_dir():
+            raise FileNotFoundError(f"Python corpus directory not found: {root}")
+        py_files = _collect_py_files(root)
+        if not py_files:
+            raise ValueError(f"no .py files found under {root}")
+        return _assemble_corpus(py_files, n_bytes)
+
+    roots: list[Path] = [_python_stdlib_root()]
+    if extended:
+        sp = _site_packages_root()
+        if sp:
+            roots.append(sp)
+
+    py_files: list[Path] = []
+    for r in roots:
+        if r.is_dir():
+            py_files.extend(_collect_py_files(r))
+
+    if not py_files:
+        raise ValueError("no .py files found in Python stdlib or site-packages")
+
+    # Deduplicate (stdlib and site-packages can overlap)
+    seen: set[Path] = set()
+    unique: list[Path] = []
+    for p in py_files:
+        if p not in seen:
+            seen.add(p)
+            unique.append(p)
+
+    return _assemble_corpus(unique, n_bytes)
 
 
 def load_corpus(
@@ -122,6 +171,8 @@ def load_corpus(
         return target.read_bytes()
     if source == "python":
         return load_python_corpus(path=path, n_bytes=n_bytes)
+    if source == "python_extended":
+        return load_python_corpus(path=path, n_bytes=n_bytes, extended=True)
     if source == "file":
         if not path or not os.path.exists(path):
             raise FileNotFoundError(f"data file not found: {path!r}")
