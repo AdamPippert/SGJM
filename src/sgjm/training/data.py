@@ -58,6 +58,48 @@ def synthetic_corpus(n_bytes: int = 1 << 20, seed: int = 0) -> bytes:
     return bytes(out)
 
 
+def _python_stdlib_root() -> Path:
+    """Return the root directory of the active Python stdlib."""
+    import sysconfig
+    stdlib = sysconfig.get_path("stdlib")
+    if stdlib and Path(stdlib).is_dir():
+        return Path(stdlib)
+    import sys
+    return Path(sys.prefix) / "lib" / f"python{sys.version_info.major}.{sys.version_info.minor}"
+
+
+def load_python_corpus(path: str | None = None, n_bytes: int = 1 << 20) -> bytes:
+    """Collect .py files from `path` (or Python stdlib) into a single byte corpus."""
+    root = Path(path) if path else _python_stdlib_root()
+    if not root.is_dir():
+        raise FileNotFoundError(f"Python corpus directory not found: {root}")
+
+    py_files = sorted(root.rglob("*.py"))
+    # Exclude test directories and cache
+    py_files = [
+        p for p in py_files
+        if not any(part in {"test", "tests", "__pycache__"} for part in p.parts)
+    ]
+    if not py_files:
+        raise ValueError(f"no .py files found under {root}")
+
+    sep = b"\n# ---\n"
+    chunks: list[bytes] = []
+    total = 0
+    for p in py_files:
+        try:
+            chunk = p.read_bytes()
+        except OSError:
+            continue
+        chunks.append(chunk)
+        total += len(chunk) + len(sep)
+        if total >= n_bytes:
+            break
+
+    corpus = sep.join(chunks)
+    return corpus[:n_bytes]
+
+
 def load_corpus(
     path: str | None = None,
     n_bytes: int = 1 << 20,
@@ -71,12 +113,15 @@ def load_corpus(
       "synthetic"       — always synthetic, ignore path
       "tinyshakespeare" — download (and cache) Karpathy's tinyshakespeare
       "file"            — require path; raise if missing
+      "python"          — collect .py files from path (or Python stdlib)
     """
     if source == "synthetic":
         return synthetic_corpus(n_bytes, seed)
     if source == "tinyshakespeare":
         target = download_tinyshakespeare()
         return target.read_bytes()
+    if source == "python":
+        return load_python_corpus(path=path, n_bytes=n_bytes)
     if source == "file":
         if not path or not os.path.exists(path):
             raise FileNotFoundError(f"data file not found: {path!r}")
