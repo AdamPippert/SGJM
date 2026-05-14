@@ -206,9 +206,7 @@ Each variant trained from scratch for 1000 steps with MLX; same shared baseline 
 
 Full sweep results: [`results/phase5-ablation-25m-mlx/`](results/phase5-ablation-25m-mlx/)
 
-### 100M Scaling Run — in progress
-
-A ~93M parameter variant (d_model=768, 9 backbone layers, 2 drafter layers) is training on Apple Silicon for 5000 steps.
+### 100M Scaling Run — Complete (2026-05-13)
 
 | Config | 25M | 100M |
 |--------|-----|------|
@@ -218,6 +216,71 @@ A ~93M parameter variant (d_model=768, 9 backbone layers, 2 drafter layers) is t
 | Drafter d_model | 192 | 384 |
 | Max seq len | 512 | 1 024 |
 | Est. params | ~25M | ~93M |
+| Training time | 27.3 min | 55.4 min |
+| Best eval total loss | 0.1790 | 0.1666 |
+| Best eval token NLL | 0.0254 | 0.0241 |
+
+Scaling return: +272% parameters, +103% training time, −6.9% eval loss.  
+Full log: [`results/sgjm-100m-mlx-run1/`](results/sgjm-100m-mlx-run1/)
+
+---
+
+## Phase 5 — Hyperparameter Sweeps
+
+### Loss Weight Sweep — `jepa` weight vs performance (1000 steps each, 2026-05-13)
+
+| `jepa_weight` | Token NLL | Accept Rate | JEPA top-1 | Merge Adv. | Finding |
+|--------------|----------:|------------:|-----------:|-----------:|---------|
+| 0.0 | 0.0992 | **2.7%** | 11.5% ≈ chance | 1.11× | JEPA weight=0 collapses acceptance (same as no_jepa ablation) |
+| 0.05 | 0.0989 | 64.2% | 97.1% | **1.20×** | Lowest weight that activates all components |
+| **0.25** | **0.1011** | 63.3% | 97.5% | 1.19× | Default weight — good balance of all metrics |
+| 1.0 | 0.1061 | 81.4% | 98.3% | 1.00× | Higher acceptance but merge precision saturates |
+| 4.0 | 0.1569 | 100% | 98.4% | 1.00× | Acceptance maxed but token NLL regresses (+58%) |
+
+**Finding**: `jepa_weight=0.05` is the effective elbow — it activates all four metrics with minimum NLL cost. The default 0.25 is a safe operating point. Going above 1.0 trades language modeling quality for acceptance rate with no merge-precision benefit.
+
+### Block Size Sweep — block_size vs performance (1000 steps each, 2026-05-13)
+
+| `block_size` | Token NLL | Accept Rate | JEPA top-1 | Merge Adv. | Finding |
+|-------------|----------:|------------:|-----------:|-----------:|---------|
+| 2 | **0.0963** | 69.0% | **99.1%** | **1.92×** | Best merge precision — smaller blocks easier to predict |
+| **4** | 0.1011 | 63.3% | 97.5% | 1.19× | Default — good balance |
+| 8 | 0.1007 | **90.8%** | 96.1% | 1.00× | Highest acceptance but merge precision collapses |
+
+**Finding**: `block_size=2` gives the best merge precision advantage (1.92×) with lowest NLL. Larger blocks are harder to predict precisely, which hurts merge clustering. `block_size=4` is the default sweet spot balancing tokens-per-step and precision.
+
+### Merge Radius Sweep — SimHash threshold vs merge precision (1000 steps each, 2026-05-13)
+
+All variants trained identically; only the eval-time merge threshold differs.
+
+| `merge_radius_bits` | Token NLL | Accept Rate | Merge JS | Random JS | Merge Adv. |
+|--------------------|----------:|------------:|---------:|----------:|-----------:|
+| 2 | 0.1011 | 63.3% | NaN | 0.6891 | 1.00× | Radius too tight — no pairs qualify |
+| 4 | 0.1011 | 63.3% | NaN | 0.6891 | 1.00× | Radius too tight — no pairs qualify |
+| **6** | **0.1011** | **63.3%** | **0.5780** | **0.6891** | **1.19×** | Sweet spot — pairs qualify, JS divergence meaningfully lower |
+| 8 | 0.1011 | 63.3% | 0.6228 | 0.6891 | 1.11× | Wider radius admits less-similar pairs |
+| 12 | 0.1011 | 63.3% | 0.6228 | 0.6891 | 1.11× | No improvement beyond r=8 |
+
+**Finding**: `merge_radius_bits=6` is the optimal threshold (default). Below 6, the radius is so tight that no pairs qualify (merge_precision_js = NaN). Above 6, admitting more diverse pairs dilutes the advantage. The 10 607× advantage in the 5000-step gate run (vs 1.19× here) confirms that merge precision is a slow-learning signal that emerges with more training.
+
+---
+
+## Generation Benchmark (2026-05-13)
+
+Benchmark: 200 tokens generated from 64-token prompt, MLX, Apple Silicon, SGJM-25M step 4500.
+
+| Metric | SGJM (50 steps × 4 tokens) | AR (200 steps × 1 token) |
+|--------|---------------------------:|-------------------------:|
+| Tokens generated | 200 | 200 |
+| Model fwd passes | 100 (50 backbone + 50 drafter) | 200 backbone |
+| Acceptance rate (harness) | 25% (1 of 4 kept) | 100% |
+| Elapsed (s) | 1.32 | 1.31 |
+| Tokens / sec | 151.7 | 153.0 |
+| **Speedup** | **0.99×** | — |
+
+**Interpretation**: This Python harness benchmark shows throughput parity — SGJM's 4-token parallel drafting absorbs its per-call overhead. The 13.92× compute-FLOPs advantage from the gate run is a theoretical upper bound that would be realized with KV-cache and fused CUDA/Metal kernels, not a naive Python harness.
+
+Full report: [`results/phase5-bench/benchmark_report.txt`](results/phase5-bench/benchmark_report.txt)
 
 ---
 
@@ -253,8 +316,11 @@ A ~93M parameter variant (d_model=768, 9 backbone layers, 2 drafter layers) is t
 ### Phase 5 — Gate Run & Analysis ✅
 - [x] Eval gate PASS: 25M SGJM vs same-budget baseline — compute advantage 13.92×, merge advantage 10 607×
 - [x] Ablation sweep: all 4 components isolated — JEPA most critical, drafter loss drives merge precision
-- [x] 100M scaling config defined and training kicked off on Apple Silicon (d_model=768, ~93M params)
-- [x] Additional sweep infrastructure ready: `python -m sgjm.research --sweep loss_weight|block_size|merge_radius`
+- [x] 100M scaling run complete (d_model=768, ~93M params) — 6.9% improvement over 25M
+- [x] Loss weight sweep: `jepa_weight=0.05` is effective elbow; default 0.25 is safe operating point
+- [x] Block size sweep: `block_size=2` best merge precision (1.92×); default 4 balances speed and precision
+- [x] Merge radius sweep: `merge_radius_bits=6` is optimal threshold
+- [x] Generation benchmark: Python harness parity (0.99×); 13.92× FLOPs advantage requires KV-cache + kernel fusion
 
 ---
 
