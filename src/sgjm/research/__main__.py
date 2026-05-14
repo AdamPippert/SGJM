@@ -21,7 +21,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--eval-batches", type=int, default=8)
     parser.add_argument("--steps", type=int, default=None,
                         help="override training steps per entry")
-    parser.add_argument("--data-source", choices=["auto", "synthetic", "tinyshakespeare", "file"],
+    parser.add_argument("--data-source",
+                        choices=["auto", "synthetic", "tinyshakespeare", "file", "python"],
                         default=None)
     parser.add_argument("--data-path", type=str, default=None)
     parser.add_argument("--seed", type=int, default=None)

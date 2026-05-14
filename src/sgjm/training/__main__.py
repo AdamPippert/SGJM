@@ -62,7 +62,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--lr", type=float, default=None)
     parser.add_argument("--checkpoint-dir", type=str, default=None)
     parser.add_argument("--data-path", type=str, default=None)
-    parser.add_argument("--data-source", choices=["auto", "synthetic", "tinyshakespeare", "file"],
+    parser.add_argument("--data-source",
+                        choices=["auto", "synthetic", "tinyshakespeare", "file", "python"],
                         default=None)
     parser.add_argument("--amp", choices=["auto", "off", "bf16", "fp16"], default=None)
     parser.add_argument("--compile", action=argparse.BooleanOptionalAction, default=None)
