@@ -1,0 +1,40 @@
+[demo] loading checkpoint: runs/sgjm-python-25m/best.safetensors
+[demo] model: step=2000  d_model=384  n_layers=10  block_size=4
+[demo] prompt: 'import json\n\ndef load_config(path):\n    """Load configuration from a JSON file."""\n    '
+[demo] generating 128 tokens...
+
+────────────────────────────────────────────────────────────
+  Prompt
+────────────────────────────────────────────────────────────
+import json
+
+def load_config(path):
+    """Load configuration from a JSON file."""
+    
+────────────────────────────────────────────────────────────
+  Autoregressive (202.7 tok/s, 0.63s)
+────────────────────────────────────────────────────────────
+import json
+
+def load_config(path):
+    """Load configuration from a JSON file."""
+    # The Parse all are nounded build all archs to allowed be used ben absen are
+    # an expressed because the aren the aren not pr
+
+────────────────────────────────────────────────────────────
+  Speculative (block=4, accept=100%, 139.5 tok/s, 0.92s)
+────────────────────────────────────────────────────────────
+import json
+
+def load_config(path):
+    """Load configuration from a JSON file."""
+    #                                                                                                                               
+
+────────────────────────────────────────────────────────────
+  Comparison
+────────────────────────────────────────────────────────────
+Method                   Tokens  Time(s)    Tok/s
+────────────────────── ──────── ──────── ────────
+Autoregressive              128     0.63    202.7
+Speculative                 128     0.92    139.5  (0.69× speedup, 100% accept)
+

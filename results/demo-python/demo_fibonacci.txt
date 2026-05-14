@@ -1,0 +1,31 @@
+[demo] loading checkpoint: runs/sgjm-python-25m/best.safetensors
+[demo] model: step=2000  d_model=384  n_layers=10  block_size=4
+[demo] prompt: 'def fibonacci(n):\n    '
+[demo] generating 128 tokens...
+
+────────────────────────────────────────────────────────────
+  Prompt
+────────────────────────────────────────────────────────────
+def fibonacci(n):
+    
+────────────────────────────────────────────────────────────
+  Autoregressive (236.1 tok/s, 0.54s)
+────────────────────────────────────────────────────────────
+def fibonacci(n):
+                raise ValueError("ISO week directive '%V' is incompatible with "
+                                                   
+
+────────────────────────────────────────────────────────────
+  Speculative (block=4, accept=100%, 125.1 tok/s, 1.02s)
+────────────────────────────────────────────────────────────
+def fibonacci(n):
+                r   i   i                                                                                                           
+
+────────────────────────────────────────────────────────────
+  Comparison
+────────────────────────────────────────────────────────────
+Method                   Tokens  Time(s)    Tok/s
+────────────────────── ──────── ──────── ────────
+Autoregressive              128     0.54    236.1
+Speculative                 128     1.02    125.1  (0.53× speedup, 100% accept)
+

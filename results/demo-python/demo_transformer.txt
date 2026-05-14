@@ -1,0 +1,36 @@
+[demo] loading checkpoint: runs/sgjm-python-25m/best.safetensors
+[demo] model: step=2000  d_model=384  n_layers=10  block_size=4
+[demo] prompt: 'class Transformer(nn.Module):\n    def __init__(self, d_model=512):\n        '
+[demo] generating 128 tokens...
+
+────────────────────────────────────────────────────────────
+  Prompt
+────────────────────────────────────────────────────────────
+class Transformer(nn.Module):
+    def __init__(self, d_model=512):
+        
+────────────────────────────────────────────────────────────
+  Autoregressive (209.2 tok/s, 0.61s)
+────────────────────────────────────────────────────────────
+class Transformer(nn.Module):
+    def __init__(self, d_model=512):
+        return self.__name__ == name * (days2, 256))
+
+    def __name__(self, days=0, days=0, hour, minutes=0, seconds=0, microseconds=0,
+
+────────────────────────────────────────────────────────────
+  Speculative (block=4, accept=94%, 140.1 tok/s, 0.91s)
+────────────────────────────────────────────────────────────
+class Transformer(nn.Module):
+    def __init__(self, d_model=512):
+        return self.__iexp__((
+line = -1)                                                                                               
+
+────────────────────────────────────────────────────────────
+  Comparison
+────────────────────────────────────────────────────────────
+Method                   Tokens  Time(s)    Tok/s
+────────────────────── ──────── ──────── ────────
+Autoregressive              128     0.61    209.2
+Speculative                 128     0.91    140.1  (0.67× speedup, 94% accept)
+
