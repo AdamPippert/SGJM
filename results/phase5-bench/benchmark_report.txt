@@ -1,0 +1,19 @@
+============================================================
+Generation Benchmark — SGJM-25M vs Autoregressive
+============================================================
+Checkpoint      : runs/sgjm-25m/best.safetensors
+Model step      : 4500
+Prompt length   : 64 tokens
+Tokens generated: 200 (SGJM: 50 steps×4; AR: 200 steps×1)
+Note: SGJM encodes 4-token node contexts; AR encodes growing context.
+      Theoretical compute advantage (full-context eval): 13.92× (gate run).
+
+Metric                                 SGJM  AR Baseline
+--------------------------------------------------------
+Tokens generated                        200          200
+Steps (model fwd passes)                100          200
+Acceptance rate (harness)            25.0%      100.0%
+Elapsed (s)                            1.32         1.31
+Tokens / sec                          151.7        153.0
+Speedup (SGJM/AR)                     0.99×
+============================================================
