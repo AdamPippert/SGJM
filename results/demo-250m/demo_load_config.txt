@@ -1,0 +1,49 @@
+[demo] loading checkpoint: runs/sgjm-250m/best.safetensors
+[demo] model: step=6500  d_model=1024  n_layers=14  block_size=4
+[demo] prompt: 'import json\n\ndef load_config(path):\n    """Load configuration from a JSON file."""\n    '
+[demo] generating 160 tokens...
+
+────────────────────────────────────────────────────────────
+  Prompt
+────────────────────────────────────────────────────────────
+import json
+
+def load_config(path):
+    """Load configuration from a JSON file."""
+    
+────────────────────────────────────────────────────────────
+  Autoregressive (23.3 tok/s, 6.88s)
+────────────────────────────────────────────────────────────
+import json
+
+def load_config(path):
+    """Load configuration from a JSON file."""
+    if path is None:
+        return path
+    if path is None:
+        return path
+    if path is None:
+        return path
+    if path is None:
+        return path
+
+
+────────────────────────────────────────────────────────────
+  Speculative (block=4, accept=100%, 7.2 tok/s, 22.16s)
+────────────────────────────────────────────────────────────
+import json
+
+def load_config(path):
+    """Load configuration from a JSON file."""
+    if upia is None:
+        return pane((
+            "Cone oo con fo  poe io  po  po  io  po  po  po  po  p   po  "   "   "   "   "   "   "   "   "   "   "   "   
+
+────────────────────────────────────────────────────────────
+  Comparison
+────────────────────────────────────────────────────────────
+Method                   Tokens  Time(s)    Tok/s
+────────────────────── ──────── ──────── ────────
+Autoregressive              160     6.88     23.3
+Speculative                 160    22.16      7.2  (0.31× speedup, 100% accept)
+

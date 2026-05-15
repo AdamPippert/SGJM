@@ -165,6 +165,31 @@ Full training log: [`results/sgjm-25m-mlx-run1/train.jsonl`](results/sgjm-25m-ml
 **Scaling return**: +272% parameters, +103% training time, −6.9% eval loss vs 25M.  
 Full log: [`results/sgjm-100m-mlx-run1/`](results/sgjm-100m-mlx-run1/)
 
+### Run 3 — 250M, MLX, Apple Silicon, 2026-05-14
+
+| | |
+|--|--|
+| **Host** | MacBook Pro (arm64) |
+| **Backend** | MLX 0.29.1 / Python 3.12 |
+| **Duration** | 365.8 min (6.1 hours) |
+| **Steps** | 10 000 |
+| **Params** | ~251M (d_model=1024, 14 layers) |
+| **Data** | Python stdlib + site-packages (32 MiB, python_extended) |
+
+| Step | Total | Token NLL | Accept Acc |
+|------|------:|----------:|-----------:|
+| 1 000 | 3.973 | 2.434 | 80.7% |
+| 2 000 | 3.131 | 1.854 | 93.7% |
+| 3 000 | 2.719 | 1.495 | 97.7% |
+| 4 000 | 2.184 | 1.111 | 97.7% |
+| 5 000 | 2.159 | 1.087 | 98.5% |
+| **6 500** | **1.823** | **0.889** | **99.1%** |
+| 7 500 | 1.827 | 0.887 | 99.3% |
+| 9 500 | 1.825 | 0.888 | 99.0% |
+
+Best eval total loss: **1.823** at step 6500. Model converged by step 6500 and plateaued — 32 MiB corpus capacity ceiling. Speculative speedup: **1.28×** on fibonacci prompt (AR 31.9 tok/s → Spec 40.9 tok/s, 100% accept).  
+Full log: [`results/sgjm-250m-mlx-run1/`](results/sgjm-250m-mlx-run1/)
+
 ---
 
 ## Phase 5 Results — Gate Run & Ablation
@@ -321,6 +346,7 @@ Full report: [`results/phase5-bench/benchmark_report.txt`](results/phase5-bench/
 - [x] Block size sweep: `block_size=2` best merge precision (1.92×); default 4 balances speed and precision
 - [x] Merge radius sweep: `merge_radius_bits=6` is optimal threshold
 - [x] Generation benchmark: Python harness parity (0.99×); 13.92× FLOPs advantage requires KV-cache + kernel fusion
+- [x] 250M scaling run complete (d_model=1024, ~251M params, 32 MiB Python corpus) — best eval total loss 1.823, 99.1% accept, 1.28× speculative speedup
 
 ---
 
