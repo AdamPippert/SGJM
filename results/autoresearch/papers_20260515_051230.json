@@ -1,0 +1,242 @@
+[
+  {
+    "category": "cs.AI",
+    "title": "Think Twice, Act Once: Verifier-Guided Action Selection For Embodied Agents",
+    "link": "https://arxiv.org/abs/2605.12620",
+    "published": "2026-05-15T00:00:00-04:00",
+    "summary": "arXiv:2605.12620v1 Announce Type: new Abstract: Building generalist embodied agents capable of solving complex real-world tasks remains a fundamental challenge in AI. Multimodal Large Language Models (MLLMs) have significantly advanced the reasoning capabilities of such agents through strong vision-language knowledge and chain-of-thought (CoT) reasoning, yet remain brittle when faced with challenging out-of-distribut",
+    "score": 4.0018
+  },
+  {
+    "category": "cs.LG",
+    "title": "EvolveMem:Self-Evolving Memory Architecture via AutoResearch for LLM Agents",
+    "link": "https://arxiv.org/abs/2605.13941",
+    "published": "2026-05-15T00:00:00-04:00",
+    "summary": "arXiv:2605.13941v1 Announce Type: new Abstract: Long-term memory is essential for LLM agents that operate across multiple sessions, yet existing memory systems treat retrieval infrastructure as fixed: stored content evolves while scoring functions, fusion strategies, and answer-generation policies remain frozen at deployment. We argue that truly adaptive memory requires co-evolution at two levels: the stored knowledg",
+    "score": 3.2018
+  },
+  {
+    "category": "cs.AI",
+    "title": "Do Androids Dream of Breaking the Game? Systematically Auditing AI Agent Benchmarks with BenchJack",
+    "link": "https://arxiv.org/abs/2605.12673",
+    "published": "2026-05-15T00:00:00-04:00",
+    "summary": "arXiv:2605.12673v1 Announce Type: new Abstract: Agent benchmarks have become the de facto measure of frontier AI competence, guiding model selection, investment, and deployment. However, reward hacking, where agents maximize a score without performing the intended task, emerges spontaneously in frontier models without overfitting. We argue that benchmarks must be secure by design. From past incidents of reward hacks,",
+    "score": 3.1018
+  },
+  {
+    "category": "cs.LG",
+    "title": "Collider-Bench: Benchmarking AI Agents with Particle Physics Analysis Reproduction",
+    "link": "https://arxiv.org/abs/2605.13950",
+    "published": "2026-05-15T00:00:00-04:00",
+    "summary": "arXiv:2605.13950v1 Announce Type: new Abstract: Autonomous language-model agents are increasingly evaluated on long-horizon tool-use tasks, but existing benchmarks rarely capture the complexity and nuance of real scientific work. To address this gap, we introduce Collider-Bench, a benchmark for evaluating whether LLM agents can reproduce experimental analyses from the Large Hadron Collider (LHC) using only public pap",
+    "score": 3.1018
+  },
+  {
+    "category": "cs.AI",
+    "title": "Macro-Action Based Multi-Agent Instruction Following through Value Cancellation",
+    "link": "https://arxiv.org/abs/2605.12655",
+    "published": "2026-05-15T00:00:00-04:00",
+    "summary": "arXiv:2605.12655v1 Announce Type: new Abstract: Multi-agent reinforcement learning (MARL) in real-world use cases may need to adapt to external natural language instructions that interrupt ongoing behavior and conflict with long-horizon objectives. However, conditioning rewards on instructions introduces a fundamental failure mode as Bellman updates couple value estimates across instruction contexts, leading to incon",
+    "score": 2.0018
+  },
+  {
+    "category": "cs.AI",
+    "title": "CHAL: Council of Hierarchical Agentic Language",
+    "link": "https://arxiv.org/abs/2605.12718",
+    "published": "2026-05-15T00:00:00-04:00",
+    "summary": "arXiv:2605.12718v1 Announce Type: new Abstract: Multi-agent debate has emerged as a promising approach for improving LLM reasoning on ground-truth tasks, yet current methodologies face certain structural limitations: debate tends to induce a martingale over belief trajectories, majority voting accounts for most observed gains, and LLMs exhibit confidence escalation rather than calibration across rounds. We argue that",
+    "score": 2.0018
+  },
+  {
+    "category": "cs.CL",
+    "title": "Dual Hierarchical Dialogue Policy Learning for Legal Inquisitive Conversational Agents",
+    "link": "https://arxiv.org/abs/2605.14057",
+    "published": "2026-05-15T00:00:00-04:00",
+    "summary": "arXiv:2605.14057v1 Announce Type: new Abstract: Most existing dialogue systems are user-driven, primarily designed to fulfill user requests. However, in many critical real-world scenarios, a conversational agent must proactively extract information to achieve its own objectives rather than merely respond. To address this gap, we introduce \\emph{Inquisitive Conversational Agents (ICAs)} and develop an ICA specifically",
+    "score": 2.0018
+  },
+  {
+    "category": "cs.CL",
+    "title": "Physics-R1: An Audited Olympiad Corpus and Recipe for Visual Physics Reasoning",
+    "link": "https://arxiv.org/abs/2605.14040",
+    "published": "2026-05-15T00:00:00-04:00",
+    "summary": "arXiv:2605.14040v1 Announce Type: new Abstract: We audit the multimodal-physics evaluation pipeline end-to-end and document three undetected construction practices that distort how the field measures vision-language reasoning: train-eval contamination, translation drift, and MCQ saturation. (1) Public training pools (UGPhysics-Train, SciInstruct, MMK12) pass single-stage 5-gram-Jaccard audits with zero hits across al",
+    "score": 1.5018
+  },
+  {
+    "category": "cs.CL",
+    "title": "Mistletoe: Stealthy Acceleration-Collapse Attacks on Speculative Decoding",
+    "link": "https://arxiv.org/abs/2605.14005",
+    "published": "2026-05-15T00:00:00-04:00",
+    "summary": "arXiv:2605.14005v1 Announce Type: new Abstract: Speculative decoding has become a widely adopted technique for accelerating large language model (LLM) inference by drafting multiple candidate tokens and verifying them with a target model in parallel. Its efficiency, however, critically depends on the average accepted length $\\tau$, i.e., how many draft tokens survive each verification step. In this work, we identify ",
+    "score": 1.3018
+  },
+  {
+    "category": "cs.CL",
+    "title": "Derivation Prompting: A Logic-Based Method for Improving Retrieval-Augmented Generation",
+    "link": "https://arxiv.org/abs/2605.14053",
+    "published": "2026-05-15T00:00:00-04:00",
+    "summary": "arXiv:2605.14053v1 Announce Type: new Abstract: The application of Large Language Models to Question Answering has shown great promise, but important challenges such as hallucinations and erroneous reasoning arise when using these models, particularly in knowledge-intensive, domain-specific tasks. To address these issues, we introduce Derivation Prompting, a novel prompting technique for the generation step of the Re",
+    "score": 1.3018
+  },
+  {
+    "category": "cs.CL",
+    "title": "When Evidence Conflicts: Uncertainty and Order Effects in Retrieval-Augmented Biomedical Question Answering",
+    "link": "https://arxiv.org/abs/2605.14115",
+    "published": "2026-05-15T00:00:00-04:00",
+    "summary": "arXiv:2605.14115v1 Announce Type: new Abstract: Biomedical retrieval-augmented large language models (LLMs) often face evidence that is incomplete, misleading, or internally contradictory, yet evaluation usually emphasizes answer accuracy under helpful context rather than reliability under conflict. Using HealthContradict, we evaluate six open-weight LLMs under five controlled evidence conditions: no retrieved contex",
+    "score": 1.3018
+  },
+  {
+    "category": "cs.LG",
+    "title": "Towards the Next Frontier of LLMs, Training on Private Data: A Cross-Domain Benchmark for Federated Fine-Tuning",
+    "link": "https://arxiv.org/abs/2605.13936",
+    "published": "2026-05-15T00:00:00-04:00",
+    "summary": "arXiv:2605.13936v1 Announce Type: new Abstract: The recent success of large language models (LLMs) has been largely driven by vast public datasets. However, the next frontier for LLM development lies beyond public data. Much of the world's most valuable information is private, especially in highly regulated sectors such as healthcare and finance, where data include patient histories or customer communications. Unlock",
+    "score": 1.1018
+  },
+  {
+    "category": "cs.AI",
+    "title": "Revealing Interpretable Failure Modes of VLMs",
+    "link": "https://arxiv.org/abs/2605.12674",
+    "published": "2026-05-15T00:00:00-04:00",
+    "summary": "arXiv:2605.12674v1 Announce Type: new Abstract: Vision-Language Models (VLMs) are increasingly used in safety-critical applications because of their broad reasoning capabilities and ability to generalize with minimal task-specific engineering. Despite these advantages, they can exhibit catastrophic failures in specific real-world situations, constituting failure modes. We introduce REVELIO, a framework for systematic",
+    "score": 0.0018
+  },
+  {
+    "category": "cs.AI",
+    "title": "Learning Transferable Latent User Preferences for Human-Aligned Decision Making",
+    "link": "https://arxiv.org/abs/2605.12682",
+    "published": "2026-05-15T00:00:00-04:00",
+    "summary": "arXiv:2605.12682v1 Announce Type: new Abstract: Large language models (LLMs) are increasingly used as reasoning modules in many applications. While they are efficient in certain tasks, LLMs often struggle to produce human-aligned solutions. Human-aligned decision making requires accounting for both explicitly stated goals and latent user preferences that shape how ambiguous situations should be resolved. Existing app",
+    "score": 0.0018
+  },
+  {
+    "category": "cs.AI",
+    "title": "On the Size Complexity and Decidability of First-Order Progression",
+    "link": "https://arxiv.org/abs/2605.12691",
+    "published": "2026-05-15T00:00:00-04:00",
+    "summary": "arXiv:2605.12691v1 Announce Type: new Abstract: Progression, the task of updating a knowledge base to reflect action effects, generally requires second-order logic. Identifying first-order special cases, by restricting either the knowledge base or action effects, has long been a central topic in reasoning about actions. It is known that local-effect, normal, and acyclic actions, three increasingly expressive classes,",
+    "score": 0.0018
+  },
+  {
+    "category": "cs.AI",
+    "title": "DisaBench: A Participatory Evaluation Framework for Disability Harms in Language Models",
+    "link": "https://arxiv.org/abs/2605.12702",
+    "published": "2026-05-15T00:00:00-04:00",
+    "summary": "arXiv:2605.12702v1 Announce Type: new Abstract: General-purpose safety benchmarks for large language models do not adequately evaluate disability-related harms. We introduce DisaBench: a taxonomy of twelve disability harm categories co-created with people with disabilities and red teaming experts, a taxonomy-driven evaluation methodology that pairs benign and adversarial prompts across seven life domains, and a datas",
+    "score": 0.0018
+  },
+  {
+    "category": "cs.AI",
+    "title": "BEHAVE: A Hybrid AI Framework for Real-Time Modeling of Collective Human Dynamics",
+    "link": "https://arxiv.org/abs/2605.12730",
+    "published": "2026-05-15T00:00:00-04:00",
+    "summary": "arXiv:2605.12730v1 Announce Type: new Abstract: Existing AI systems for modeling human behavior operate at the level of individuals or detect events after they occur. As a result, they systematically fail to capture the collective dynamics that determine whether a group remains stable or transitions into escalation or breakdown. We propose a different foundation: a group of interacting humans constitutes a complex dy",
+    "score": 0.0018
+  },
+  {
+    "category": "cs.AI",
+    "title": "State-Centric Decision Process",
+    "link": "https://arxiv.org/abs/2605.12755",
+    "published": "2026-05-15T00:00:00-04:00",
+    "summary": "arXiv:2605.12755v1 Announce Type: new Abstract: Language environments such as web browsers, code terminals, and interactive simulations emit raw text rather than states, and provide none of the runtime structure that MDP analysis requires. No explicit state space, no observation-to-state mapping, no certified transitions, and no termination criterion. We introduce the State-Centric Decision Process (SDP), a runtime f",
+    "score": 0.0018
+  },
+  {
+    "category": "cs.CL",
+    "title": "Merging Methods for Multilingual Knowledge Editing for Large Language Models: An Empirical Odyssey",
+    "link": "https://arxiv.org/abs/2605.13919",
+    "published": "2026-05-15T00:00:00-04:00",
+    "summary": "arXiv:2605.13919v1 Announce Type: new Abstract: Multilingual knowledge editing (MKE) remains challenging because language-specific edits interfere with one another, even when locate-then-edit methods work well in monolingual settings. This paper focuses on three issues: the effectiveness of vector merging methods for MKE, the extent to which Task Singular Vectors for Merging (TSVM) can reduce multilingual interferenc",
+    "score": 0.0018
+  },
+  {
+    "category": "cs.CL",
+    "title": "VectraYX-Nano: A 42M-Parameter Spanish Cybersecurity Language Model with Curriculum Learning and Native Tool Use",
+    "link": "https://arxiv.org/abs/2605.13989",
+    "published": "2026-05-15T00:00:00-04:00",
+    "summary": "arXiv:2605.13989v1 Announce Type: new Abstract: We present VectraYX-Nano, a 41.95M-parameter decoder-only language model trained from scratch in Spanish for cybersecurity, with a Latin-American focus and native tool invocation via the Model Context Protocol (MCP). Four contributions: (i) Corpus: VectraYX-Sec-ES, a 170M-token Spanish corpus from an eight-VM pipeline (~$25 USD) partitioned into conversational (42M toke",
+    "score": 0.0018
+  },
+  {
+    "category": "cs.CL",
+    "title": "PEML: Parameter-efficient Multi-Task Learning with Optimized Continuous Prompts",
+    "link": "https://arxiv.org/abs/2605.14055",
+    "published": "2026-05-15T00:00:00-04:00",
+    "summary": "arXiv:2605.14055v1 Announce Type: new Abstract: Parameter-Efficient Fine-Tuning (PEFT) is widely used for adapting Large Language Models (LLMs) for various tasks. Recently, there has been an increasing demand for fine-tuning a single LLM for multiple tasks because it requires overall less data for fine-tuning thanks to the common features shared among tasks. More importantly, LLMs are resource demanding and deploying",
+    "score": 0.0018
+  },
+  {
+    "category": "cs.CL",
+    "title": "Distribution Corrected Offline Data Distillation for Large Language Models",
+    "link": "https://arxiv.org/abs/2605.14071",
+    "published": "2026-05-15T00:00:00-04:00",
+    "summary": "arXiv:2605.14071v1 Announce Type: new Abstract: Distilling reasoning traces from strong large language models into smaller ones is a promising route to improve intelligence in resource-constrained settings. Existing approaches face a fundamental trade-off: offline distillation from teacher-generated traces provides high-quality, sample-efficient supervision but suffers from distributional drift: during training, the ",
+    "score": 0.0018
+  },
+  {
+    "category": "cs.CL",
+    "title": "Measuring and Mitigating Toxicity in Large Language Models: A Comprehensive Replication Study",
+    "link": "https://arxiv.org/abs/2605.14087",
+    "published": "2026-05-15T00:00:00-04:00",
+    "summary": "arXiv:2605.14087v1 Announce Type: new Abstract: Large Language Models (LLMs), when trained on web-scale corpora, inherently absorb toxic patterns from their training data. This leads to ``toxic degeneration'' where even innocuous prompts can trigger harmful outputs. This phenomenon poses significant risks for real-world deployments. Thus, necessitating effective mitigation strategies that should maintain model utilit",
+    "score": 0.0018
+  },
+  {
+    "category": "cs.LG",
+    "title": "Vision-Based Runtime Monitoring under Varying Specifications using Semantic Latent Representations",
+    "link": "https://arxiv.org/abs/2605.13923",
+    "published": "2026-05-15T00:00:00-04:00",
+    "summary": "arXiv:2605.13923v1 Announce Type: new Abstract: We study certified runtime monitoring of past-time signal temporal logic (ptSTL) from visual observations under partial observability. The monitor must infer safety-relevant quantities from images and provide finite-sample guarantees, while being \\emph{reusable}: once trained and calibrated, it should certify any formula in a target fragment without per-formula retraini",
+    "score": 0.0018
+  },
+  {
+    "category": "cs.LG",
+    "title": "Mechanistic Interpretability of EEG Foundation Models via Sparse Autoencoders",
+    "link": "https://arxiv.org/abs/2605.13930",
+    "published": "2026-05-15T00:00:00-04:00",
+    "summary": "arXiv:2605.13930v1 Announce Type: new Abstract: EEG foundation models achieve state-of-the-art clinical performance, yet the internal computations driving their predictions remain opaque: a barrier to clinical trust. We apply TopK Sparse Autoencoders (SAEs) across three architecturally distinct EEG transformers: SleepFM, REVE, and LaBraM to extract sparse feature dictionaries from their embeddings. By grounding these",
+    "score": 0.0018
+  },
+  {
+    "category": "cs.LG",
+    "title": "Rethinking Molecular OOD Generalization via Target-Aware Source Selection",
+    "link": "https://arxiv.org/abs/2605.13932",
+    "published": "2026-05-15T00:00:00-04:00",
+    "summary": "arXiv:2605.13932v1 Announce Type: new Abstract: Robust prediction of molecular properties under extreme out-of-distribution (OOD) scenarios is a pivotal bottleneck in AI-driven drug discovery. Current scaffold-splitting protocols fail to obstruct microscopic semantic overlap, predisposing models to shortcut learning and overestimating their true extrapolation capability; meanwhile, conventional domain adaptation para",
+    "score": 0.0018
+  },
+  {
+    "category": "cs.LG",
+    "title": "Beyond Mode-Seeking RL: Trajectory-Balance Post-Training for Diffusion Language Models",
+    "link": "https://arxiv.org/abs/2605.13935",
+    "published": "2026-05-15T00:00:00-04:00",
+    "summary": "arXiv:2605.13935v1 Announce Type: new Abstract: Diffusion language models are a promising alternative to autoregressive models, yet post-training methods for them largely adapt reward-maximizing objectives. We identify a central failure mode in this setting we call trajectory locking: sampled reward-driven updates over-concentrate probability mass onto a narrow set of denoising paths, reducing coverage of alternative",
+    "score": 0.0018
+  },
+  {
+    "category": "cs.LG",
+    "title": "TabPFN-3: Technical Report",
+    "link": "https://arxiv.org/abs/2605.13986",
+    "published": "2026-05-15T00:00:00-04:00",
+    "summary": "arXiv:2605.13986v1 Announce Type: new Abstract: Tabular data underpins most high-value prediction problems in science and industry, and TabPFN has driven the foundation model revolution for this modality. Designed with feedback from our users, TabPFN-3 builds on this foundation to scale state-of-the-art performance to datasets with 1M training rows and substantially reduce training and inference time. Pretrained excl",
+    "score": 0.0018
+  },
+  {
+    "category": "cs.LG",
+    "title": "Neural Fields for NV-Center Inverse Sensing",
+    "link": "https://arxiv.org/abs/2605.13988",
+    "published": "2026-05-15T00:00:00-04:00",
+    "summary": "arXiv:2605.13988v1 Announce Type: new Abstract: Inverse problems in scientific sensing are often solved with either hand-designed regularizers or supervised networks trained on simulated labels, yet both can fail when the forward model is nonlinear, spectrally coupled, and physically delicate. We study this issue for noise sensing based on nitrogen-vacancy (NV) centers in diamond, where a quantum sensor measures magn",
+    "score": 0.0018
+  },
+  {
+    "category": "cs.LG",
+    "title": "Self-Pruned Key-Value Attention: Learning When to Write by Predicting Future Utility",
+    "link": "https://arxiv.org/abs/2605.14037",
+    "published": "2026-05-15T00:00:00-04:00",
+    "summary": "arXiv:2605.14037v1 Announce Type: new Abstract: Under modern test-time compute and agentic paradigms, language models process ever-longer sequences. Efficient text generation with transformer architectures is increasingly constrained by the Key-Value cache memory footprint and bandwidth. To address this limitation, we introduce Self-Pruned Key-Value Attention (SP-KV), a mechanism designed to predict future KV utility",
+    "score": 0.0018
+  }
+]

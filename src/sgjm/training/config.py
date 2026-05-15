@@ -131,8 +131,38 @@ class TrainingConfig:
                 warmup_steps=1000,
                 eval_batches=8,
             ),
-            corpus_bytes=32 << 20,  # 32 MiB — large enough to avoid overfitting
+            corpus_bytes=32 << 20,  # 32 MiB — current local benchmark corpus
             checkpoint_dir="runs/sgjm-250m",
+        )
+
+    @classmethod
+    def sgjm_1b(cls) -> "TrainingConfig":
+        return cls(
+            model=ModelConfig(
+                d_model=2048,
+                n_layers=20,
+                n_heads=16,
+                d_ff=8192,
+                drafter_layers=3,
+                drafter_d_model=768,
+                drafter_heads=12,
+                drafter_d_ff=3072,
+                judge_hidden=4096,
+                verifier_hidden=2048,
+                block_size=2,
+                max_seq_len=4096,
+                baseline_n_layers=26,
+            ),
+            optim=OptimConfig(
+                lr=6e-5,
+                batch_size=1,
+                seq_len=2048,
+                max_steps=30000,
+                warmup_steps=3000,
+                eval_batches=8,
+            ),
+            corpus_bytes=256 << 20,
+            checkpoint_dir="runs/sgjm-1b",
         )
 
     @classmethod
