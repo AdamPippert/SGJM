@@ -1,0 +1,25 @@
+{
+  "generated_at": "2026-05-15T12:12:30.107603+00:00",
+  "report": "/Users/adam/Development/SGJM/results/autoresearch/sgjm_autoresearch_20260515_051230.md",
+  "papers": "/Users/adam/Development/SGJM/results/autoresearch/papers_20260515_051230.json",
+  "variants": [
+    {
+      "name": "sgjm-25m",
+      "params_m": 25.0,
+      "data_source": "auto",
+      "corpus_bytes": 1048576,
+      "best_token_nll": 0.024779903003945947,
+      "best_accept_rate": 0.9999302455357143,
+      "notes": "Gate-pass config; tiny corpus, likely saturated; near-perfect acceptance."
+    },
+    {
+      "name": "sgjm-250m",
+      "params_m": 251.0,
+      "data_source": "python_extended",
+      "corpus_bytes": 33554432,
+      "best_token_nll": 0.889,
+      "best_accept_rate": 0.991,
+      "notes": "Converged then plateaued at 32 MiB python corpus capacity ceiling."
+    }
+  ]
+}
