@@ -157,12 +157,47 @@ class TrainingConfig:
                 lr=6e-5,
                 batch_size=1,
                 seq_len=2048,
-                max_steps=30000,
-                warmup_steps=3000,
+                max_steps=50_000,
+                warmup_steps=5_000,
                 eval_batches=8,
             ),
-            corpus_bytes=256 << 20,
+            corpus_bytes=256 << 20,  # 256 MiB
             checkpoint_dir="runs/sgjm-1b",
+        )
+
+    @classmethod
+    def sgjm_1b_smoke(cls) -> "TrainingConfig":
+        """Fast smoke-test variant of the 1B config."""
+        return cls(
+            model=ModelConfig(
+                d_model=256,
+                n_layers=2,
+                n_heads=8,
+                d_ff=1024,
+                drafter_layers=1,
+                drafter_d_model=128,
+                drafter_heads=8,
+                drafter_d_ff=512,
+                judge_hidden=256,
+                verifier_hidden=128,
+                block_size=2,
+                max_seq_len=128,
+                baseline_n_layers=3,
+            ),
+            optim=OptimConfig(
+                lr=6e-5,
+                batch_size=1,
+                seq_len=64,
+                max_steps=4,
+                warmup_steps=1,
+                eval_batches=2,
+            ),
+            log_every=1,
+            eval_every=1000,
+            checkpoint_every=1000,
+            corpus_bytes=8192,
+            checkpoint_dir="runs/sgjm-1b-smoke",
+            amp="off",
         )
 
     @classmethod
