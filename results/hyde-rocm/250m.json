@@ -1,0 +1,17 @@
+{
+  "run": "sgjm-250m-rocm",
+  "machine": "hyde",
+  "backend": "rocm",
+  "gpu": "AMD Radeon 8060S (Strix Halo)",
+  "hip_version": "7.2.53211",
+  "pytorch_version": "2.11.0",
+  "date": "2026-05-18",
+  "steps": 10000,
+  "elapsed_s": 4128.5,
+  "elapsed_min": 68.8,
+  "steps_per_sec": 2.42,
+  "final_total_loss": 1.3466,
+  "final_token_loss": 0.5843,
+  "final_accept_acc": 0.9956,
+  "initial_total_loss": 8.8398
+}
