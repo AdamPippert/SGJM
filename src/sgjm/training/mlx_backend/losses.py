@@ -57,8 +57,10 @@ def compute_losses(
         )
 
         pos = future_hidden
-        # roll along the batch axis to build a same-shape negative
-        neg = mx.concatenate([future_hidden[-1:], future_hidden[:-1]], axis=0)
+        # Roll along the sequence axis so negatives are genuinely distinct even
+        # when batch_size=1. Rolling on axis=0 (batch) returns the identity at B=1,
+        # causing the verifier to receive contradictory zero-net gradients.
+        neg = mx.concatenate([future_hidden[:, -1:], future_hidden[:, :-1]], axis=1)
         v_pos = model.verifier(parent_hidden, pos)
         v_neg = model.verifier(parent_hidden, neg)
         verifier_loss = 0.5 * (
