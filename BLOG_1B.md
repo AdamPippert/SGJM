@@ -199,60 +199,62 @@ For reference, here is the complete scaling table across all variants trained to
 | 250M | apippert-mac (M-series) | MLX | 10,000 | — | — | — | — |
 | 25M | Hyde (Strix Halo) | ROCm | 5,000 | 20.9 min | 4.0 | 0.152 | 98.0% |
 | 250M | Hyde (Strix Halo) | ROCm | 10,000 | 68.8 min | 2.4 | 0.584 | 99.6% |
-| **1B** | **Mac Studio M1 Ultra** | **MLX** | **[updating]** | **[updating]** | **[updating]** | **[updating]** | **[updating]** |
-| **1B** | **Hyde (Strix Halo)** | **ROCm** | **[updating]** | **[updating]** | **[updating]** | **[updating]** | **[updating]** |
+| **1B** | **Mac Studio M1 Ultra** | **MLX** | **5,750 / 50k** | **4.6h (of ~54h)** | **0.35** | **1.97** | **n/a †** |
+| **1B** | **Hyde (Strix Halo)** | **ROCm** | **8,225 / 50k** | **4.6h (of ~27h)** | **0.50** | **1.21** | **n/a †** |
 
 The 250M Hyde token_loss (0.584) after 10,000 steps on 256 MiB Python is not a strong comparison to the 25M MacBook token_loss (0.025) after 5,000 steps on 1 MiB Shakespeare. They are different tasks. The relevant comparison at each scale is the delta between SGJM and the same-budget baseline on the same corpus, which the eval gate measures.
 
+† *Accept acc is not meaningful at 1B with batch_size=1; see the Verifier Collapse section below.*
+
 ---
 
-## Live: 1B Training in Progress
+## Live: 1B Training — 4.6 Hours In
 
-Both machines started the 1B run simultaneously. Here is what step 0 looked like.
+Both machines started the 1B run simultaneously and are running without issue. After 4.6 hours of wall time, here is where each stands.
 
-**Mac Studio M1 Ultra (MLX backend):**
-```
-[sgjm] backend=mlx params=1417.34M
-[sgjm] step=     0 lr=1.20e-08 total=9.4373 tok=6.2839 draft=5.6462 jepa=0.4041 ver=0.6930 acc=0.481
-elapsed: 4.34s  (includes MLX compilation on first call)
-```
-
-**Hyde, Framework Desktop (ROCm backend):**
-```
-[sgjm:sgjm] backend=rocm device=cuda params=1417.34M
-             backbone=1298.10M drafter=108.22M judge=8.39M verifier=10.49M
-[sgjm:sgjm] step=     0 lr=1.20e-08 total=9.2647 tok=5.9358 draft=5.8129 jepa=0.4274 ver=0.6935 acc=0.491
-elapsed: 2.09s
-```
-
-Both machines report 1,417M parameters. The breakdown on Hyde (printed by `param_breakdown()` in the torch model) confirms the component distribution: the backbone takes ~1,298M (91.6%), the drafter ~108M (7.6%), the judge ~8.4M (0.6%), and the verifier ~10.5M (0.7%). This is the expected shape — the backbone dominates at 1B, which is why the overall model behaves predominantly as a strong language model with lightweight auxiliary heads.
-
-Both start at approximately 50% accept_acc. This is the correct behavior for a randomly initialized model: the verifier has learned nothing yet, so it accepts roughly half the contrastive pairs by chance. By step 500 at smaller scales, accept_acc reliably exceeds 90%. The question at 1B is whether the judge latent signal converges as quickly given the higher-dimensional representation space.
-
-The starting losses are also as expected. Token CE near ln(256) = 5.545 would be pure uniform random; the slightly higher values (6.28 on MLX, 5.94 on ROCm) reflect the Xavier/normal initialization producing non-uniform initial logits. The total loss is higher on the MLX run because the initial token CE is higher — the random initialization is seed-dependent and the two backends have different internal RNG implementations.
-
-The 4.34s MLX step-0 elapsed time includes the JIT compilation that MLX performs on the first call to each compute graph. Subsequent steps will be faster. Hyde's 2.09s is hardware evaluation time without a compilation phase (ROCm kernels are compiled at the CUDA driver level, not at framework dispatch time).
-
-### What Convergence Should Look Like
-
-Based on the smaller model trajectories, I expect the following shape for the 1B loss curve:
-
-- **Steps 0–5,000 (warmup)**: Total loss drops steeply. The token CE should fall from ~6 to somewhere between 2 and 4, depending on how quickly the backbone fits the Python corpus. The JEPA loss will drop rapidly because the judge has a clear signal to follow. Accept_acc will cross 90% in this window.
-
-- **Steps 5,000–20,000**: The main learning curve. Token CE should continue dropping. The JEPA loss will plateau when the judge is well-calibrated to the backbone's current hidden states. Drafter loss tracks token CE with a lag (the drafter is learning to predict the same targets as the backbone but from a smaller model and without causal context beyond the parent latent).
-
-- **Steps 20,000–50,000**: Refinement. The larger model has more capacity to continue fitting the Python corpus, so I expect slower but steady improvement in token CE relative to the 250M run. The JEPA and verifier losses should be near-converged by this point, with accept_acc stabilized.
-
-Measured steady-state throughput once both machines cleared first-step compilation:
+**Throughput (measured steady-state):**
 
 | Machine | Backend | Steps/sec | s/step | ETA (50k steps) |
 |---|---|---|---|---|
-| Hyde (Strix Halo) | ROCm / bf16 AMP | **0.51** | 1.96s | **~27 hours** |
-| Mac Studio M1 Ultra | MLX | **0.26** | 3.92s | **~54 hours** |
+| Hyde (Strix Halo) | ROCm / bf16 AMP | **0.50** | 2.00s | **~27 hours** |
+| Mac Studio M1 Ultra | MLX | **0.35** | 2.85s | **~40 hours** |
 
-Hyde runs roughly 2× faster than the Mac Studio for the 1B model, despite the M1 Ultra's advantage in raw memory bandwidth. The likely cause: PyTorch's bf16 AMP path on ROCm lets the Strix Halo operate on half-precision activations throughout, halving the memory traffic for the attention operations that dominate at seq_len=2048. MLX operates in bf16 natively on M-series but may have higher per-dispatch overhead at this parameter count due to its lazy-evaluation compilation model. The raw bandwidth advantage of M1 Ultra's unified memory fabric does not fully compensate at this scale.
+Hyde runs ~1.4× faster than the Mac Studio at this scale. Both are slower than the early estimate based on the first 75 steps (which included MLX JIT compilation overhead). The actual steady-state on Mac Studio settled at 2.85s/step rather than 3.92s — MLX's lazy evaluation amortizes compilation cost after the first few hundred steps.
 
-I will update this post with checkpoint-500 and checkpoint-5000 numbers when they are available.
+### Loss Trajectories
+
+**Mac Studio M1 Ultra (MLX)** — step 5,750 / 50,000:
+
+| Step | Token loss | JEPA loss | Verifier loss |
+|------|-----------|-----------|---------------|
+| 0 | 6.284 | 1.192 | 0.702 |
+| 500 | 3.027 | 0.197 | 0.695 |
+| 1,000 | 2.004 | 0.072 | 0.693 |
+| 3,000 | 2.451 | 0.057 | 0.693 |
+| **5,750** | **1.973** | **0.059** | **0.693** |
+
+**Hyde, Framework Desktop (ROCm)** — step 8,225 / 50,000:
+
+| Step | Token loss | JEPA loss | Verifier loss |
+|------|-----------|-----------|---------------|
+| 0 | 5.936 | 1.467 | 0.737 |
+| 500 | 2.796 | 0.279 | 0.698 |
+| 1,000 | 2.331 | 0.130 | 0.695 |
+| 3,000 | 2.211 | 0.134 | 0.694 |
+| 5,000 | 1.819 | 0.089 | 0.694 |
+| **8,225** | **1.210** | **0.281** | **0.693** |
+
+Both token CE trajectories are healthy. Hyde's token loss (1.21 at step 8,225) is ahead of Mac Studio (1.97 at step 5,750), but Hyde has processed ~43% more steps in the same wall time. The JEPA loss on Mac Studio has stabilized near 0.06; on Hyde it has risen slightly to ~0.23–0.28 in later steps and shows more variance. This backend-specific JEPA behaviour is worth monitoring — if it diverges rather than stabilizing it would suggest a numerical precision difference in the ROCm bf16 MSE path.
+
+### The Verifier Collapse at batch_size=1
+
+There is an architectural issue that emerged at this scale and did not appear at 25M, 100M, or 250M: **the verifier is stuck at exactly loss=0.693 (ln 2) with 50% acceptance rate**, and does not improve across 8,000+ steps on either machine.
+
+The cause is specific to batch_size=1. The verifier is trained with contrastive pairs: positive examples are real future hidden states; negatives are constructed by rolling the batch tensor along the batch dimension. At batch_size=4 (used for all smaller models), rolling gives four genuinely different negative examples. At batch_size=1, rolling a tensor of shape `[1, T, D]` along the batch dimension returns the identical tensor. The positive and negative are the same example.
+
+The resulting gradient is exactly zero: BCE(σ(score), 1) pushes score upward; BCE(σ(score), 0) pushes it downward by the same magnitude. The verifier receives contradictory signals of equal strength and cannot move. Its loss stabilizes at ln(2) ≈ 0.693, the maximum entropy state.
+
+This is a bug in the current 1B configuration, not a property of the architecture. The fix: roll along the sequence dimension instead of the batch dimension, giving T position-based negatives within the single example. The current run continues because token CE, drafter CE, and JEPA converge correctly — the verifier contributes no gradient and no acceptance signal for this run. The accept_acc metric stays at 50% for the duration.
 
 ---
 
