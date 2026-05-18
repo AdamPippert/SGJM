@@ -55,7 +55,10 @@ def compute_losses(
         )
 
         pos = future_hidden
-        neg = future_hidden.roll(shifts=1, dims=0)
+        # Roll along the sequence dim so negatives are genuinely distinct even
+        # when batch_size=1. Rolling on dim=0 (batch) returns the identity at B=1,
+        # causing the verifier to receive contradictory zero-net gradients.
+        neg = future_hidden.roll(shifts=1, dims=1)
         v_pos = model.verifier(parent_hidden, pos)
         v_neg = model.verifier(parent_hidden, neg)
         verifier_loss = 0.5 * (

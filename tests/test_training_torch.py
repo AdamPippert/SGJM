@@ -64,6 +64,40 @@ def test_trainer_smoke_run(tmp_path):
     assert (tmp_path / "run" / "train.jsonl").exists()
 
 
+def test_verifier_negatives_differ_at_batch_size_1():
+    """Regression: rolling on dim=0 at B=1 returns the identical tensor,
+    giving the verifier zero net gradient and pinning accept_acc at 0.5."""
+    import torch
+    from sgjm.training.torch_backend.losses import compute_losses
+
+    cfg = TrainingConfig.smoke()
+    # Force batch_size=1 — the failure mode
+    cfg.optim.batch_size = 1
+    model = SGJM(cfg.model)
+    corpus = synthetic_corpus(4096, seed=99)
+    ds = ByteDataset(corpus, cfg.optim.seq_len)
+    import random
+    rng = random.Random(0)
+    xs, ys = ds.batch(1, rng)
+    x = torch.tensor(xs, dtype=torch.long)
+    y = torch.tensor(ys, dtype=torch.long)
+
+    total, parts = compute_losses(model, (x, y), cfg)
+
+    # Verifier gradient must be non-zero at B=1; if negatives = positives the
+    # gradient cancels and the verifier parameter norms never change.
+    total.backward()
+    verifier_grad_norm = sum(
+        p.grad.abs().sum().item()
+        for p in model.verifier.parameters()
+        if p.grad is not None
+    )
+    assert verifier_grad_norm > 0, (
+        "Verifier has zero gradient at batch_size=1 — "
+        "negatives are identical to positives (batch-roll collapse)"
+    )
+
+
 def test_adapters_drive_harness(tmp_path):
     from sgjm.harness.runner import HarnessConfig, HarnessRunner
     from sgjm.training.torch_backend.adapters import bundle_for_harness
