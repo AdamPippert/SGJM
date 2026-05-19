@@ -1,0 +1,4 @@
+[sgjm] resolved backend=mlx size=25m
+[sgjm] backend=mlx params=1400.67M
+[sgjm] step=     0 lr=2.00e-08 total=8.9748 tok=5.8542 draft=5.5188 jepa=1.1670 ver=0.6944 acc=0.500
+[sgjm] step=     1 lr=4.00e-08 total=9.5179 tok=6.2640 draft=5.7794 jepa=1.1775 ver=0.6976 acc=0.500

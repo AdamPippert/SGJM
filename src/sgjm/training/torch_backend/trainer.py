@@ -143,8 +143,11 @@ def train(
     )
 
     amp_dtype = _amp_dtype(cfg, backend)
-    use_grad_scaler = amp_dtype is torch.float16
-    scaler = torch.amp.GradScaler("cuda", enabled=use_grad_scaler)
+    use_grad_scaler = amp_dtype is torch.float16 and backend == "cuda"
+    if hasattr(torch, "amp") and hasattr(torch.amp, "GradScaler"):
+        scaler = torch.amp.GradScaler("cuda", enabled=use_grad_scaler)
+    else:
+        scaler = torch.cuda.amp.GradScaler(enabled=use_grad_scaler)
 
     out_dir = Path(cfg.checkpoint_dir)
     out_dir.mkdir(parents=True, exist_ok=True)

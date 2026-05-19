@@ -1,0 +1,112 @@
+[sgjm] resolved backend=mlx size=25m
+[sgjm] backend=mlx params=252.35M
+[sgjm] step=     0 lr=1.00e-07 total=8.8236 tok=5.9432 draft=5.4094 jepa=1.1857 ver=0.7146 acc=0.454
+[sgjm] step=    25 lr=2.60e-06 total=6.5174 tok=4.0505 draft=4.5899 jepa=1.1656 ver=0.6933 acc=0.410
+[sgjm] step=    50 lr=5.10e-06 total=5.5059 tok=3.3622 draft=3.9571 jepa=1.0966 ver=0.6934 acc=0.502
+[sgjm] step=    75 lr=7.60e-06 total=5.3952 tok=3.3809 draft=3.7246 jepa=0.9652 ver=0.6928 acc=0.407
+[sgjm] step=   100 lr=1.01e-05 total=5.6028 tok=3.5472 draft=3.8437 jepa=0.7830 ver=0.6929 acc=0.501
+[sgjm] step=   125 lr=1.26e-05 total=4.8161 tok=3.0773 draft=3.2475 jepa=0.5963 ver=0.6927 acc=0.522
+[sgjm] step=   150 lr=1.51e-05 total=4.9062 tok=3.1264 draft=3.3633 jepa=0.4275 ver=0.6920 acc=0.555
+[sgjm] step=   175 lr=1.76e-05 total=4.7839 tok=3.0792 draft=3.2309 jepa=0.3374 ver=0.6933 acc=0.500
+[sgjm] step=   200 lr=2.01e-05 total=5.3684 tok=3.4536 draft=3.6608 jepa=0.3339 ver=0.6375 acc=0.709
+[sgjm] step=   225 lr=2.26e-05 total=4.5727 tok=2.9250 draft=3.1493 jepa=0.1784 ver=0.6898 acc=0.408
+[sgjm] step=   250 lr=2.51e-05 total=3.8022 tok=2.4097 draft=2.6410 jepa=0.1716 ver=0.6859 acc=0.601
+[sgjm] eval@250: {'total': 4.913861950238545, 'token': 3.1354472239812217, 'drafter': 3.4083130757013955, 'jepa': 0.20380433648824692, 'verifier': 0.67347119251887, 'accept_acc': 0.6151961286862692}
+[sgjm] step=   275 lr=2.76e-05 total=3.4268 tok=2.1571 draft=2.4032 jepa=0.1508 ver=0.6624 acc=0.558
+[sgjm] step=   300 lr=3.01e-05 total=4.6768 tok=3.0209 draft=3.1944 jepa=0.2622 ver=0.4056 acc=0.811
+[sgjm] step=   325 lr=3.26e-05 total=4.4669 tok=2.8719 draft=3.0588 jepa=0.1259 ver=0.6630 acc=0.645
+[sgjm] step=   350 lr=3.51e-05 total=4.5198 tok=2.8959 draft=3.1159 jepa=0.1194 ver=0.6749 acc=0.535
+[sgjm] step=   375 lr=3.76e-05 total=4.2136 tok=2.6868 draft=2.9249 jepa=0.1167 ver=0.6581 acc=0.574
+[sgjm] step=   400 lr=4.01e-05 total=4.5889 tok=2.9535 draft=3.1392 jepa=0.1190 ver=0.6737 acc=0.562
+[sgjm] step=   425 lr=4.26e-05 total=3.7954 tok=2.3599 draft=2.7629 jepa=0.1167 ver=0.5294 acc=0.811
+[sgjm] step=   450 lr=4.51e-05 total=3.9148 tok=2.4771 draft=2.7785 jepa=0.1677 ver=0.3959 acc=0.952
+[sgjm] step=   475 lr=4.76e-05 total=4.1574 tok=2.6304 draft=2.9253 jepa=0.1141 ver=0.6612 acc=0.607
+[sgjm] step=   500 lr=5.01e-05 total=3.9123 tok=2.4770 draft=2.7533 jepa=0.0932 ver=0.6176 acc=0.672
+[sgjm] eval@500: {'total': 4.121642430623372, 'token': 2.627545158068339, 'drafter': 2.8734511534372964, 'jepa': 0.10830457632740338, 'verifier': 0.5817671120166779, 'accept_acc': 0.6979575355847677}
+[sgjm] step=   525 lr=5.26e-05 total=3.9883 tok=2.5342 draft=2.7887 jepa=0.1088 ver=0.6113 acc=0.671
+[sgjm] step=   550 lr=5.51e-05 total=4.1433 tok=2.6689 draft=2.8954 jepa=0.1147 ver=0.1901 acc=0.950
+[sgjm] step=   575 lr=5.76e-05 total=4.2547 tok=2.7212 draft=2.9432 jepa=0.1192 ver=0.6241 acc=0.687
+[sgjm] step=   600 lr=6.01e-05 total=4.1410 tok=2.6166 draft=2.9269 jepa=0.1031 ver=0.6329 acc=0.617
+[sgjm] step=   625 lr=6.26e-05 total=4.1282 tok=2.6550 draft=2.8765 jepa=0.1049 ver=0.3049 acc=0.901
+[sgjm] step=   650 lr=6.51e-05 total=4.1074 tok=2.6179 draft=2.8711 jepa=0.0990 ver=0.5514 acc=0.728
+[sgjm] step=   675 lr=6.76e-05 total=4.7129 tok=3.0019 draft=3.3101 jepa=0.0988 ver=0.5766 acc=0.701
+[sgjm] step=   700 lr=7.01e-05 total=4.0597 tok=2.5890 draft=2.8942 jepa=0.1342 ver=0.1270 acc=0.953
+[sgjm] step=   725 lr=7.26e-05 total=3.5759 tok=2.2593 draft=2.5145 jepa=0.0878 ver=0.6322 acc=0.633
+[sgjm] step=   750 lr=7.51e-05 total=4.1969 tok=2.6764 draft=2.9186 jepa=0.1102 ver=0.6268 acc=0.663
+[sgjm] eval@750: {'total': 4.3698010842005415, 'token': 2.7960795958836875, 'drafter': 3.054114023844401, 'jepa': 0.11374000211556752, 'verifier': 0.4411301960547765, 'accept_acc': 0.8014706472555796}
+[sgjm] step=   775 lr=7.76e-05 total=4.2756 tok=2.7226 draft=2.9929 jepa=0.1011 ver=0.5804 acc=0.683
+[sgjm] step=   800 lr=8.01e-05 total=4.4240 tok=2.7976 draft=3.1384 jepa=0.1035 ver=0.5860 acc=0.683
+[sgjm] step=   825 lr=8.26e-05 total=3.4709 tok=2.1840 draft=2.4590 jepa=0.0980 ver=0.5947 acc=0.684
+[sgjm] step=   850 lr=8.51e-05 total=4.7916 tok=3.0861 draft=3.2952 jepa=0.0875 ver=0.6143 acc=0.651
+[sgjm] step=   875 lr=8.76e-05 total=4.0297 tok=2.5642 draft=2.8146 jepa=0.0997 ver=0.6029 acc=0.680
+[sgjm] step=   900 lr=9.01e-05 total=3.7768 tok=2.3918 draft=2.6602 jepa=0.0788 ver=0.5886 acc=0.689
+[sgjm] step=   925 lr=9.26e-05 total=3.7167 tok=2.3556 draft=2.6380 jepa=0.0890 ver=0.4151 acc=0.829
+[sgjm] step=   950 lr=9.51e-05 total=3.7216 tok=2.3193 draft=2.7487 jepa=0.0763 ver=0.2547 acc=0.908
+[sgjm] step=   975 lr=9.76e-05 total=4.3725 tok=2.7832 draft=3.0752 jepa=0.1058 ver=0.5138 acc=0.737
+[sgjm] step=  1000 lr=1.00e-04 total=3.6290 tok=2.2855 draft=2.5788 jepa=0.0954 ver=0.5571 acc=0.739
+[sgjm] eval@1000: {'total': 4.217257936795552, 'token': 2.6767027775446572, 'drafter': 2.9822624127070108, 'jepa': 0.09203251947959264, 'verifier': 0.5027579168478647, 'accept_acc': 0.7491830488046011}
+[sgjm] step=  1025 lr=9.99e-05 total=3.8445 tok=2.4461 draft=2.7027 jepa=0.0864 ver=0.4800 acc=0.765
+[sgjm] step=  1050 lr=9.97e-05 total=5.5899 tok=3.6703 draft=3.7675 jepa=0.0884 ver=0.3381 acc=0.907
+[sgjm] step=  1075 lr=9.94e-05 total=4.6550 tok=3.0043 draft=3.2345 jepa=0.0995 ver=0.2944 acc=0.880
+[sgjm] step=  1100 lr=9.89e-05 total=3.8009 tok=2.4394 draft=2.6180 jepa=0.0914 ver=0.5425 acc=0.745
+[sgjm] step=  1125 lr=9.83e-05 total=3.8900 tok=2.4641 draft=2.7717 jepa=0.0724 ver=0.4111 acc=0.840
+[sgjm] step=  1150 lr=9.76e-05 total=3.8432 tok=2.4461 draft=2.6860 jepa=0.0910 ver=0.5631 acc=0.704
+[sgjm] step=  1175 lr=9.67e-05 total=3.3120 tok=2.1228 draft=2.2639 jepa=0.0788 ver=0.6176 acc=0.692
+[sgjm] step=  1200 lr=9.57e-05 total=4.1836 tok=2.6754 draft=2.9529 jepa=0.1169 ver=0.2498 acc=0.900
+[sgjm] step=  1225 lr=9.46e-05 total=4.0956 tok=2.6293 draft=2.8734 jepa=0.0920 ver=0.2553 acc=0.892
+[sgjm] step=  1250 lr=9.33e-05 total=4.0518 tok=2.6034 draft=2.7941 jepa=0.0913 ver=0.5281 acc=0.757
+[sgjm] eval@1250: {'total': 3.8821394443511963, 'token': 2.4629796942075095, 'drafter': 2.7439624071121216, 'jepa': 0.0900350275139014, 'verifier': 0.47718606144189835, 'accept_acc': 0.8058823943138123}
+[sgjm] step=  1275 lr=9.19e-05 total=2.2343 tok=1.4030 draft=1.5883 jepa=0.0619 ver=0.3871 acc=0.887
+[sgjm] step=  1300 lr=9.05e-05 total=4.2141 tok=2.7169 draft=2.8822 jepa=0.1022 ver=0.5732 acc=0.692
+[sgjm] step=  1325 lr=8.89e-05 total=3.5649 tok=2.2859 draft=2.5175 jepa=0.0986 ver=0.1303 acc=0.975
+[sgjm] step=  1350 lr=8.72e-05 total=3.8055 tok=2.4287 draft=2.6747 jepa=0.1125 ver=0.3534 acc=0.846
+[sgjm] step=  1375 lr=8.54e-05 total=4.1362 tok=2.6566 draft=2.8934 jepa=0.0978 ver=0.2894 acc=0.890
+[sgjm] step=  1400 lr=8.35e-05 total=3.7015 tok=2.3823 draft=2.5933 jepa=0.0892 ver=0.1701 acc=0.951
+[sgjm] step=  1425 lr=8.15e-05 total=3.9932 tok=2.5713 draft=2.7918 jepa=0.1022 ver=0.1962 acc=0.942
+[sgjm] step=  1450 lr=7.94e-05 total=3.5451 tok=2.2645 draft=2.5338 jepa=0.1121 ver=0.0313 acc=0.996
+[sgjm] step=  1475 lr=7.72e-05 total=3.7876 tok=2.4199 draft=2.6347 jepa=0.0987 ver=0.5072 acc=0.746
+[sgjm] step=  1500 lr=7.50e-05 total=3.8094 tok=2.4369 draft=2.6626 jepa=0.0992 ver=0.3901 acc=0.824
+[sgjm] eval@1500: {'total': 3.912659525871277, 'token': 2.4763396581014, 'drafter': 2.772951086362203, 'jepa': 0.09495894486705463, 'verifier': 0.5043564929316441, 'accept_acc': 0.7949346800645193}
+[sgjm] step=  1525 lr=7.27e-05 total=3.8630 tok=2.4955 draft=2.6875 jepa=0.1108 ver=0.1581 acc=0.974
+[sgjm] step=  1550 lr=7.03e-05 total=3.9559 tok=2.5556 draft=2.7521 jepa=0.0999 ver=0.1786 acc=0.953
+[sgjm] step=  1575 lr=6.79e-05 total=4.3678 tok=2.8185 draft=3.0652 jepa=0.1199 ver=0.0582 acc=0.983
+[sgjm] step=  1600 lr=6.55e-05 total=3.6813 tok=2.3936 draft=2.5188 jepa=0.1069 ver=0.2212 acc=0.926
+[sgjm] step=  1625 lr=6.29e-05 total=3.5627 tok=2.2858 draft=2.5225 jepa=0.1154 ver=0.0515 acc=0.990
+[sgjm] step=  1650 lr=6.04e-05 total=3.3831 tok=2.1661 draft=2.3889 jepa=0.0905 ver=0.1689 acc=0.960
+[sgjm] step=  1675 lr=5.78e-05 total=3.8032 tok=2.4591 draft=2.6632 jepa=0.0961 ver=0.0370 acc=0.997
+[sgjm] step=  1700 lr=5.52e-05 total=4.3951 tok=2.8203 draft=3.1007 jepa=0.1281 ver=0.1456 acc=0.968
+[sgjm] step=  1725 lr=5.26e-05 total=2.8833 tok=1.8251 draft=2.0415 jepa=0.0865 ver=0.3601 acc=0.851
+[sgjm] step=  1750 lr=5.00e-05 total=3.5389 tok=2.2485 draft=2.4894 jepa=0.1103 ver=0.4340 acc=0.792
+[sgjm] eval@1750: {'total': 3.7574750979741416, 'token': 2.3934351603190103, 'drafter': 2.65031627813975, 'jepa': 0.11621163909633954, 'verifier': 0.3407587632536888, 'accept_acc': 0.8523693283398946}
+[sgjm] step=  1775 lr=4.74e-05 total=4.2801 tok=2.7675 draft=2.9872 jepa=0.1524 ver=0.0470 acc=0.994
+[sgjm] step=  1800 lr=4.48e-05 total=3.3294 tok=2.1236 draft=2.3774 jepa=0.1233 ver=0.0592 acc=0.993
+[sgjm] step=  1825 lr=4.22e-05 total=4.1103 tok=2.6403 draft=2.8832 jepa=0.1305 ver=0.1914 acc=0.936
+[sgjm] step=  1850 lr=3.96e-05 total=3.5846 tok=2.2635 draft=2.6101 jepa=0.1168 ver=0.0554 acc=0.990
+[sgjm] step=  1875 lr=3.71e-05 total=3.6502 tok=2.3255 draft=2.5971 jepa=0.1398 ver=0.1512 acc=0.936
+[sgjm] step=  1900 lr=3.45e-05 total=3.6868 tok=2.3492 draft=2.5834 jepa=0.1200 ver=0.4235 acc=0.806
+[sgjm] step=  1925 lr=3.21e-05 total=3.6307 tok=2.3346 draft=2.5390 jepa=0.1135 ver=0.1901 acc=0.915
+[sgjm] step=  1950 lr=2.97e-05 total=3.5599 tok=2.2722 draft=2.5435 jepa=0.1312 ver=0.0356 acc=0.988
+[sgjm] step=  1975 lr=2.73e-05 total=2.9200 tok=1.8440 draft=2.0987 jepa=0.1124 ver=0.1917 acc=0.913
+[sgjm] step=  2000 lr=2.50e-05 total=4.0002 tok=2.5717 draft=2.7959 jepa=0.1077 ver=0.2473 acc=0.915
+[sgjm] eval@2000: {'total': 3.4374317725499473, 'token': 2.1826334595680237, 'drafter': 2.440246125062307, 'jepa': 0.12176858882109325, 'verifier': 0.281230635009706, 'accept_acc': 0.8906046251455942}
+[sgjm] step=  2025 lr=2.28e-05 total=4.4268 tok=2.7678 draft=3.2776 jepa=0.1601 ver=0.0519 acc=0.992
+[sgjm] step=  2050 lr=2.06e-05 total=3.2019 tok=2.0520 draft=2.2077 jepa=0.1119 ver=0.4348 acc=0.789
+[sgjm] step=  2075 lr=1.85e-05 total=4.0595 tok=2.6178 draft=2.8211 jepa=0.1295 ver=0.2289 acc=0.908
+[sgjm] step=  2100 lr=1.65e-05 total=3.7572 tok=2.3926 draft=2.6652 jepa=0.1372 ver=0.2290 acc=0.903
+[sgjm] step=  2125 lr=1.46e-05 total=2.8929 tok=1.8335 draft=2.0543 jepa=0.1162 ver=0.2573 acc=0.890
+[sgjm] step=  2150 lr=1.28e-05 total=2.6656 tok=1.6598 draft=1.9708 jepa=0.1281 ver=0.0952 acc=0.972
+[sgjm] step=  2175 lr=1.11e-05 total=3.6159 tok=2.3273 draft=2.5175 jepa=0.1248 ver=0.2178 acc=0.910
+[sgjm] step=  2200 lr=9.55e-06 total=3.1119 tok=1.9811 draft=2.2319 jepa=0.1177 ver=0.0388 acc=0.995
+[sgjm] step=  2225 lr=8.07e-06 total=3.3400 tok=2.1468 draft=2.3192 jepa=0.1273 ver=0.2618 acc=0.879
+[sgjm] step=  2250 lr=6.70e-06 total=3.8396 tok=2.4628 draft=2.7030 jepa=0.1305 ver=0.1531 acc=0.950
+[sgjm] eval@2250: {'total': 3.8283124367396035, 'token': 2.4631226658821106, 'drafter': 2.684314767519633, 'jepa': 0.13592140128215155, 'verifier': 0.11800381975869338, 'accept_acc': 0.9588235914707184}
+[sgjm] step=  2275 lr=5.45e-06 total=3.4722 tok=2.2177 draft=2.4585 jepa=0.1355 ver=0.1469 acc=0.954
+[sgjm] step=  2300 lr=4.32e-06 total=3.0799 tok=1.9385 draft=2.2438 jepa=0.1468 ver=0.0601 acc=0.993
+[sgjm] step=  2325 lr=3.32e-06 total=3.4060 tok=2.1376 draft=2.4422 jepa=0.1308 ver=0.4275 acc=0.809
+[sgjm] step=  2350 lr=2.45e-06 total=2.6122 tok=1.6391 draft=1.8862 jepa=0.1145 ver=0.2312 acc=0.892
+[sgjm] step=  2375 lr=1.70e-06 total=3.3817 tok=2.1656 draft=2.3862 jepa=0.1304 ver=0.1249 acc=0.968
+[sgjm] step=  2400 lr=1.09e-06 total=3.4588 tok=2.2081 draft=2.4194 jepa=0.1349 ver=0.3441 acc=0.832
+[sgjm] step=  2425 lr=6.16e-07 total=3.3214 tok=2.1237 draft=2.3386 jepa=0.1254 ver=0.1977 acc=0.923
+[sgjm] step=  2450 lr=2.74e-07 total=3.4760 tok=2.2279 draft=2.4391 jepa=0.1335 ver=0.1899 acc=0.922
+[sgjm] step=  2475 lr=6.85e-08 total=3.4741 tok=2.2082 draft=2.4660 jepa=0.1404 ver=0.2345 acc=0.903
+[sgjm] step=  2499 lr=1.10e-10 total=3.2509 tok=2.0600 draft=2.3102 jepa=0.1416 ver=0.2712 acc=0.888

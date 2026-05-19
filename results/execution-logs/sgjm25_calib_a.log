@@ -1,0 +1,67 @@
+=== START sgjm25_calib_a 2026-05-17T16:34:53Z ===
+[sgjm] resolved backend=mlx size=25m
+Traceback (most recent call last):
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/runpy.py", line 197, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/runpy.py", line 87, in _run_code
+    exec(code, run_globals)
+  File "/Users/adam/Development/SGJM/src/sgjm/training/__main__.py", line 102, in <module>
+    sys.exit(main())
+  File "/Users/adam/Development/SGJM/src/sgjm/training/__main__.py", line 94, in main
+    from sgjm.training.mlx_backend.trainer import train as mlx_train
+  File "/Users/adam/Development/SGJM/src/sgjm/training/mlx_backend/__init__.py", line 1, in <module>
+    from sgjm.training.mlx_backend.model import SGJM
+  File "/Users/adam/Development/SGJM/src/sgjm/training/mlx_backend/model.py", line 5, in <module>
+    import mlx.core as mx
+ModuleNotFoundError: No module named 'mlx'
+=== START sgjm25_calib_a 2026-05-17T16:35:56Z ===
+[sgjm] resolved backend=cpu size=25m
+
+A module that was compiled using NumPy 1.x cannot be run in
+NumPy 2.0.2 as it may crash. To support both 1.x and 2.x
+versions of NumPy, modules must be compiled with NumPy 2.0.
+Some module may need to rebuild instead e.g. with 'pybind11>=2.12'.
+
+If you are a user of the module, the easiest solution will be to
+downgrade to 'numpy<2' or try to upgrade the affected module.
+We expect that some modules will need time to support NumPy 2.
+
+Traceback (most recent call last):  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/runpy.py", line 197, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/runpy.py", line 87, in _run_code
+    exec(code, run_globals)
+  File "/Users/adam/Development/SGJM/src/sgjm/training/__main__.py", line 102, in <module>
+    sys.exit(main())
+  File "/Users/adam/Development/SGJM/src/sgjm/training/__main__.py", line 91, in main
+    from sgjm.training.torch_backend.trainer import train as torch_train
+  File "/Users/adam/Development/SGJM/src/sgjm/training/torch_backend/__init__.py", line 1, in <module>
+    from sgjm.training.torch_backend.baseline import BaselineLM, compute_baseline_losses
+  File "/Users/adam/Development/SGJM/src/sgjm/training/torch_backend/baseline.py", line 5, in <module>
+    import torch
+  File "/Users/adam/Library/Python/3.9/lib/python/site-packages/torch/__init__.py", line 1477, in <module>
+    from .functional import *  # noqa: F403
+  File "/Users/adam/Library/Python/3.9/lib/python/site-packages/torch/functional.py", line 9, in <module>
+    import torch.nn.functional as F
+  File "/Users/adam/Library/Python/3.9/lib/python/site-packages/torch/nn/__init__.py", line 1, in <module>
+    from .modules import *  # noqa: F403
+  File "/Users/adam/Library/Python/3.9/lib/python/site-packages/torch/nn/modules/__init__.py", line 35, in <module>
+    from .transformer import TransformerEncoder, TransformerDecoder, \
+  File "/Users/adam/Library/Python/3.9/lib/python/site-packages/torch/nn/modules/transformer.py", line 20, in <module>
+    device: torch.device = torch.device(torch._C._get_default_device()),  # torch.device('cpu'),
+/Users/adam/Library/Python/3.9/lib/python/site-packages/torch/nn/modules/transformer.py:20: UserWarning: Failed to initialize NumPy: _ARRAY_API not found (Triggered internally at /Users/runner/work/pytorch/pytorch/pytorch/torch/csrc/utils/tensor_numpy.cpp:84.)
+  device: torch.device = torch.device(torch._C._get_default_device()),  # torch.device('cpu'),
+[sgjm:sgjm] backend=cpu device=cpu params=25.86M backbone=23.90M drafter=1.38M judge=0.39M verifier=0.20M
+[sgjm:sgjm] step=     0 lr=1.50e-06 total=8.5883 token=5.6671 drafter=5.6688 jepa=1.0435 verifier=0.6941 accept_acc=0.4943
+[sgjm:sgjm] step=    25 lr=3.90e-05 total=6.4446 token=3.9944 drafter=4.7345 jepa=0.9640 verifier=0.6937 accept_acc=0.5000
+[sgjm:sgjm] step=    50 lr=7.65e-05 total=5.6545 token=3.4744 drafter=4.2214 jepa=0.6978 verifier=0.6907 accept_acc=0.5002
+[sgjm:sgjm] step=    75 lr=1.14e-04 total=4.9613 token=3.0331 drafter=3.7581 jepa=0.3196 verifier=0.6644 accept_acc=0.6395
+[sgjm:sgjm] step=   100 lr=1.51e-04 total=4.3109 token=2.6401 drafter=3.2454 jepa=0.3358 verifier=0.6256 accept_acc=0.6646
+[sgjm:sgjm] step=   125 lr=1.89e-04 total=4.2401 token=2.6145 drafter=3.1469 jepa=0.4249 verifier=0.6192 accept_acc=0.6580
+[sgjm:sgjm] step=   150 lr=2.26e-04 total=4.2967 token=2.6452 drafter=3.1923 jepa=0.5055 verifier=0.6008 accept_acc=0.6777
+[sgjm:sgjm] step=   175 lr=2.64e-04 total=4.0413 token=2.5051 drafter=2.9664 jepa=0.4706 verifier=0.5908 accept_acc=0.6882
+[sgjm:sgjm] step=   200 lr=3.00e-04 total=3.8437 token=2.3547 drafter=2.8630 jepa=0.5804 verifier=0.5692 accept_acc=0.7121
+[sgjm:sgjm] step=   225 lr=3.00e-04 total=3.5720 token=2.1792 drafter=2.6785 jepa=0.5428 verifier=0.5277 accept_acc=0.7441
+[sgjm:sgjm] step=   250 lr=2.99e-04 total=4.1226 token=2.5578 drafter=3.0115 jepa=0.6062 verifier=0.5745 accept_acc=0.7057
+[sgjm:sgjm] eval@250: {'total': 3.9560472667217255, 'token': 2.463844805955887, 'drafter': 2.8697565495967865, 'jepa': 0.5883685424923897, 'verifier': 0.5581154897809029, 'accept_acc': 0.7123523578047752}
+[sgjm:sgjm] step=   275 lr=2.99e-04 total=3.9171 token=2.4268 drafter=2.8652 jepa=0.6252 verifier=0.5289 accept_acc=0.7323
+[sgjm:sgjm] step=   300 lr=2.98e-04 total=3.5431 token=2.1649 drafter=2.6432 jepa=0.6124 verifier=0.5198 accept_acc=0.7480
