@@ -1,0 +1,229 @@
+"""Mamba-2 / SSD block for the MLX backend.
+
+Implements the Structured State Space Duality (SSD) scan with chunked
+processing so complexity is O(T * chunk_size) rather than O(T^2).
+
+The block is a drop-in replacement for the transformer Block: both accept
+[B, T, d_model] and return [B, T, d_model].
+"""
+from __future__ import annotations
+
+import mlx.core as mx
+import mlx.nn as nn
+
+
+def _ssd_chunk_mlx(
+    X: mx.array,
+    A_log: mx.array,
+    B: mx.array,
+    C: mx.array,
+    h: mx.array,
+) -> tuple[mx.array, mx.array]:
+    """Single chunk of the SSD algorithm.
+
+    Args:
+        X: [B, L, H, P]  — input projected to SSM heads
+        A_log: [B, L, H]  — log decay rates (negative or zero)
+        B: [B, L, N]      — SSM input projection
+        C: [B, L, N]      — SSM output projection
+        h: [B, H, P, N]   — running state from previous chunk
+
+    Returns:
+        y: [B, L, H, P]   — output
+        h_new: [B, H, P, N] — updated running state
+    """
+    B_sz, L, H, P = X.shape
+    N = B.shape[-1]
+
+    # Cumulative log decay within chunk [B, L, H]
+    cumlog = mx.cumsum(A_log, axis=1)
+
+    # --- State h contribution: gamma[t] * C[t] @ h ---
+    gamma = mx.exp(cumlog)  # [B, L, H]
+    # [B, L, H, 1, 1] * [B, 1, H, P, N] → [B, L, H, P, N]
+    gamma_h = gamma[:, :, :, None, None] * h[:, None, :, :, :]
+    # contract N with C: [B, L, H, P, N] * [B, L, 1, 1, N] → sum → [B, L, H, P]
+    y_h = (gamma_h * C[:, :, None, None, :]).sum(-1)
+
+    # --- Intra-chunk contribution ---
+    # cumlog_start[s] represents the cumulative log at the start of position s
+    # (i.e., cumlog[s-1], with cumlog[-1]=0)
+    cumlog_start = mx.concatenate(
+        [mx.zeros((B_sz, 1, H)), cumlog[:, :-1]], axis=1
+    )
+
+    # M[b, t, s, h] = exp(cumlog[b,t,h] - cumlog_start[b,s,h]) * (t >= s)
+    M = mx.exp(cumlog[:, :, None, :] - cumlog_start[:, None, :, :])  # [B, L, L, H]
+    causal_mask = mx.tril(mx.ones((L, L)))  # [L, L]
+    M = M * causal_mask[None, :, :, None]
+
+    # BX[b, s, h, p, n] = X[b,s,h,p] * B[b,s,n]
+    BX = X[:, :, :, :, None] * B[:, :, None, None, :]  # [B, L, H, P, N]
+
+    # Contract BX over N with C via matmul:
+    # BX_flat [B, L*H*P, N] @ C^T [B, N, L] → [B, L*H*P, L_t]
+    BX_flat = BX.reshape(B_sz, L * H * P, N)
+    CT = C.transpose(0, 2, 1)  # [B, N, L]
+    BX_C_flat = BX_flat @ CT   # [B, L*H*P, L_t]
+
+    # Reshape to [B, L_s, H, P, L_t] then move L_t to front → [B, L_t, L_s, H, P]
+    BX_C = BX_C_flat.reshape(B_sz, L, H, P, L)
+    BX_C = mx.transpose(BX_C, (0, 4, 1, 2, 3))  # [B, L_t, L_s, H, P]
+
+    # y_intra[b, t, h, p] = sum_s M[b,t,s,h] * BX_C[b,t,s,h,p]
+    y_intra = (M[:, :, :, :, None] * BX_C).sum(2)  # [B, L_t, H, P]
+
+    y = y_h + y_intra
+
+    # --- Update running state ---
+    gamma_full = mx.exp(cumlog[:, -1, :])  # [B, H]
+    decay_to_end = mx.exp(cumlog[:, -1:, :] - cumlog_start)  # [B, L, H]
+    dBX = (BX * decay_to_end[:, :, :, None, None]).sum(1)   # [B, H, P, N]
+    h_new = gamma_full[:, :, None, None] * h + dBX
+
+    return y, h_new
+
+
+class Mamba2Block(nn.Module):
+    """Mamba-2 SSM block with chunked SSD scan.
+
+    Drop-in replacement for the transformer Block. Takes [B, T, d_model]
+    and returns [B, T, d_model] with a pre-norm + residual pattern.
+    """
+
+    def __init__(
+        self,
+        d_model: int,
+        state_size: int = 64,
+        expand: int = 2,
+        d_conv: int = 4,
+        head_dim: int = 64,
+        chunk_size: int = 64,
+    ) -> None:
+        super().__init__()
+        self.d_model = d_model
+        self.d_inner = d_model * expand
+        self.n_heads = self.d_inner // head_dim
+        self.head_dim = head_dim
+        self.state_size = state_size
+        self.d_conv = d_conv
+        self.chunk_size = chunk_size
+
+        if self.d_inner % head_dim:
+            raise ValueError(
+                f"d_inner ({self.d_inner}) must be divisible by head_dim ({head_dim})"
+            )
+
+        self.norm = nn.RMSNorm(d_model)
+        # in_proj splits into: x_ssm (d_inner), z (d_inner), B_ssm (state_size),
+        # C_ssm (state_size), log_dt (n_heads)
+        self.in_proj = nn.Linear(
+            d_model,
+            2 * self.d_inner + 2 * state_size + self.n_heads,
+            bias=False,
+        )
+        # Depthwise conv parameters: [d_conv, d_inner] weight, [d_inner] bias
+        self.conv_weight = mx.random.normal((d_conv, self.d_inner)) * 0.02
+        self.conv_bias = mx.zeros(self.d_inner)
+        # SSM learnable parameters
+        self.A_log = mx.log(
+            mx.arange(1, self.n_heads + 1, dtype=mx.float32)
+        )  # [n_heads]
+        self.D = mx.ones(self.n_heads, dtype=mx.float32)      # skip connection [n_heads]
+        self.dt_bias = mx.zeros(self.n_heads, dtype=mx.float32)
+        self.out_proj = nn.Linear(self.d_inner, d_model, bias=False)
+
+    def _causal_conv(self, x: mx.array) -> mx.array:
+        """Apply causal depthwise conv with left-padding.
+
+        Args:
+            x: [B, T, d_inner]
+
+        Returns:
+            [B, T, d_inner]
+        """
+        T = x.shape[1]
+        x_pad = mx.pad(x, [(0, 0), (self.d_conv - 1, 0), (0, 0)])
+        y = sum(
+            x_pad[:, k : k + T, :] * self.conv_weight[k]
+            for k in range(self.d_conv)
+        )
+        return y + self.conv_bias
+
+    def _ssd_scan(
+        self,
+        X: mx.array,
+        A_log_dt: mx.array,
+        B: mx.array,
+        C: mx.array,
+    ) -> mx.array:
+        """Chunked SSD scan over the full sequence.
+
+        Args:
+            X: [B, T, H, P]
+            A_log_dt: [B, T, H]  — log decay (A_log * dt), non-positive
+            B: [B, T, N]
+            C: [B, T, N]
+
+        Returns:
+            Y: [B, T, H, P]
+        """
+        B_sz, T, H, P = X.shape
+        N = B.shape[-1]
+        L = self.chunk_size
+
+        pad = (-T) % L
+        if pad:
+            X = mx.pad(X, [(0, 0), (0, pad), (0, 0), (0, 0)])
+            A_log_dt = mx.pad(A_log_dt, [(0, 0), (0, pad), (0, 0)])
+            B = mx.pad(B, [(0, 0), (0, pad), (0, 0)])
+            C = mx.pad(C, [(0, 0), (0, pad), (0, 0)])
+
+        Tp = T + pad
+        n_chunks = Tp // L
+        Xc = X.reshape(B_sz, n_chunks, L, H, P)
+        Ac = A_log_dt.reshape(B_sz, n_chunks, L, H)
+        Bc = B.reshape(B_sz, n_chunks, L, N)
+        Cc = C.reshape(B_sz, n_chunks, L, N)
+
+        h = mx.zeros((B_sz, H, P, N))
+        chunks: list[mx.array] = []
+        for c in range(n_chunks):
+            y_chunk, h = _ssd_chunk_mlx(Xc[:, c], Ac[:, c], Bc[:, c], Cc[:, c], h)
+            chunks.append(y_chunk)
+
+        Y = mx.concatenate(chunks, axis=1)
+        return Y[:, :T]
+
+    def __call__(self, x: mx.array) -> mx.array:
+        B, T, _ = x.shape
+        residual = x
+        x = self.norm(x)
+
+        proj = self.in_proj(x)
+        # Split projections
+        splits = [
+            self.d_inner,
+            2 * self.d_inner,
+            2 * self.d_inner + self.state_size,
+            2 * self.d_inner + 2 * self.state_size,
+        ]
+        x_ssm = proj[..., : splits[0]]
+        z = proj[..., splits[0] : splits[1]]
+        B_ssm = proj[..., splits[1] : splits[2]]
+        C_ssm = proj[..., splits[2] : splits[3]]
+        log_dt = proj[..., splits[3] :]
+
+        x_ssm = nn.silu(self._causal_conv(x_ssm))
+        dt = nn.softplus(log_dt + self.dt_bias)
+        A_log_dt = -mx.exp(self.A_log)[None, None, :] * dt  # [B, T, H], non-positive
+
+        x_heads = x_ssm.reshape(B, T, self.n_heads, self.head_dim)
+        y = self._ssd_scan(x_heads, A_log_dt, B_ssm, C_ssm)
+
+        # D skip connection: broadcast over head_dim P
+        D_skip = self.D[None, None, :, None] * x_heads
+        y = y + D_skip
+        y = y.reshape(B, T, self.d_inner) * nn.silu(z)
+        y = self.out_proj(y)
+        return residual + y
