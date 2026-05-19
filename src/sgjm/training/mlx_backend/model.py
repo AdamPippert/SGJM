@@ -5,7 +5,11 @@ import math
 import mlx.core as mx
 import mlx.nn as nn
 
-from sgjm.training.config import ModelConfig
+from sgjm.training.config import ModelConfig, is_attn_layer
+from sgjm.training.mlx_backend.mamba2 import Mamba2Block
+
+# Re-export under both names for backward compatibility and test imports
+_is_attn_layer = is_attn_layer
 
 
 class CausalAttention(nn.Module):
@@ -61,7 +65,19 @@ class Backbone(nn.Module):
         self.cfg = cfg
         self.tok_emb = nn.Embedding(cfg.vocab_size, cfg.d_model)
         self.pos_emb = nn.Embedding(cfg.max_seq_len, cfg.d_model)
-        self.blocks = [Block(cfg.d_model, cfg.n_heads, cfg.d_ff) for _ in range(cfg.n_layers)]
+        self.blocks = [
+            Block(cfg.d_model, cfg.n_heads, cfg.d_ff)
+            if is_attn_layer(i, cfg.attn_every_n)
+            else Mamba2Block(
+                cfg.d_model,
+                state_size=cfg.mamba_state_size,
+                expand=cfg.mamba_expand,
+                d_conv=cfg.mamba_d_conv,
+                head_dim=cfg.mamba_head_dim,
+                chunk_size=cfg.mamba_chunk_size,
+            )
+            for i in range(cfg.n_layers)
+        ]
         self.norm = nn.RMSNorm(cfg.d_model)
         self.lm_head = nn.Linear(cfg.d_model, cfg.vocab_size, bias=False)
         if cfg.tie_embeddings:
