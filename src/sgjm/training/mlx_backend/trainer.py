@@ -170,16 +170,25 @@ def train(
 
         (total, parts), grads = loss_and_grad(model, x, y)
 
+        gnorm_val = float("nan")
+        bad_grad = False
         if cfg.optim.grad_clip and cfg.optim.grad_clip > 0:
-            grads, _ = optim.clip_grad_norm(grads, cfg.optim.grad_clip)
+            grads, gnorm = optim.clip_grad_norm(grads, cfg.optim.grad_clip)
+            mx.eval(gnorm)
+            gnorm_val = float(gnorm)
+            bad_grad = not math.isfinite(gnorm_val)
 
-        optimizer.update(model, grads)
+        if not bad_grad:
+            optimizer.update(model, grads)
+
         mx.eval(model.parameters(), optimizer.state, parts)
 
         if step % cfg.log_every == 0 or step == cfg.optim.max_steps - 1:
             entry: dict[str, object] = {
                 "step": step,
                 "lr": lr,
+                "gnorm": gnorm_val,
+                "skip": bad_grad,
                 "elapsed": time.time() - t0,
                 **{k: float(v) for k, v in parts.items()},
             }
@@ -191,8 +200,9 @@ def train(
                     f"tok={float(parts['token']):.4f}"
                 )
             else:
+                skip_tag = " SKIP" if bad_grad else ""
                 print(
-                    f"[sgjm] step={step:>6} lr={lr:.2e} "
+                    f"[sgjm] step={step:>6} lr={lr:.2e} gnorm={gnorm_val:.3e}{skip_tag} "
                     f"total={float(parts['total']):.4f} "
                     f"tok={float(parts['token']):.4f} "
                     f"draft={float(parts['drafter']):.4f} "
