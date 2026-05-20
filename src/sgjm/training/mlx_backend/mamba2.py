@@ -39,11 +39,21 @@ def _ssd_chunk_mlx(
         [mx.zeros((B_sz, 1, H)), cumlog[:, :-1]], axis=1
     )  # [B, L, H]
 
+    # Use a stop-gradient copy of cumlog for M only.
+    # The backward through M involves a reverse-cumsum of a per-(t,s) sum,
+    # giving O(L^2) gradient amplification into A_log — producing gradient
+    # norms of 1e7+ and NaN optimizer state after one step in MLX float32.
+    # Blocking this specific path keeps all B/C/X gradients intact and lets
+    # A_log still receive (small) gradients via the gamma/decay paths.
+    cumlog_sg = mx.stop_gradient(cumlog)
+    cumlog_start_sg = mx.concatenate(
+        [mx.zeros((B_sz, 1, H)), cumlog_sg[:, :-1]], axis=1
+    )
     # Clamp before exp: valid entries (t >= s) have log_M <= 0 by construction.
     # Without the clamp, upper-triangle entries (t < s) are positive and can
     # overflow to inf; inf * 0 from the causal mask then produces NaN.
     log_M = mx.minimum(
-        cumlog[:, :, None, :] - cumlog_start[:, None, :, :], 0.0
+        cumlog_sg[:, :, None, :] - cumlog_start_sg[:, None, :, :], 0.0
     )  # [B, L_t, L_s, H]
     M = mx.exp(log_M)
     causal_mask = mx.tril(mx.ones((L, L)))
@@ -51,7 +61,7 @@ def _ssd_chunk_mlx(
 
     # State contribution: gamma[b,t,h] * (h[b,h,p,:] · C[b,t,:])
     # Use einsum to avoid materialising [B, L, H, P, N].
-    gamma = mx.exp(cumlog)  # [B, L, H]
+    gamma = mx.exp(cumlog)  # [B, L, H] — uses original cumlog (gradient flows to A_log)
     hC = mx.einsum("bhpn,bln->blhp", h, C)  # [B, L, H, P]
     y_h = gamma[:, :, :, None] * hC  # [B, L, H, P]
 
