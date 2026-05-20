@@ -33,52 +33,43 @@ def _ssd_chunk_mlx(
         h_new: [B, H, P, N] — updated running state
     """
     B_sz, L, H, P = X.shape
-    N = B.shape[-1]
 
-    # Cumulative log decay within chunk [B, L, H]
-    cumlog = mx.cumsum(A_log, axis=1)
-
-    # --- State h contribution: gamma[t] * C[t] @ h ---
-    gamma = mx.exp(cumlog)  # [B, L, H]
-    # [B, L, H, 1, 1] * [B, 1, H, P, N] → [B, L, H, P, N]
-    gamma_h = gamma[:, :, :, None, None] * h[:, None, :, :, :]
-    # contract N with C: [B, L, H, P, N] * [B, L, 1, 1, N] → sum → [B, L, H, P]
-    y_h = (gamma_h * C[:, :, None, None, :]).sum(-1)
-
-    # --- Intra-chunk contribution ---
-    # cumlog_start[s] represents the cumulative log at the start of position s
-    # (i.e., cumlog[s-1], with cumlog[-1]=0)
+    cumlog = mx.cumsum(A_log, axis=1)  # [B, L, H]
     cumlog_start = mx.concatenate(
         [mx.zeros((B_sz, 1, H)), cumlog[:, :-1]], axis=1
-    )
+    )  # [B, L, H]
 
-    # M[b, t, s, h] = exp(cumlog[b,t,h] - cumlog_start[b,s,h]) * (t >= s)
-    M = mx.exp(cumlog[:, :, None, :] - cumlog_start[:, None, :, :])  # [B, L, L, H]
-    causal_mask = mx.tril(mx.ones((L, L)))  # [L, L]
-    M = M * causal_mask[None, :, :, None]
+    # Clamp before exp: valid entries (t >= s) have log_M <= 0 by construction.
+    # Without the clamp, upper-triangle entries (t < s) are positive and can
+    # overflow to inf; inf * 0 from the causal mask then produces NaN.
+    log_M = mx.minimum(
+        cumlog[:, :, None, :] - cumlog_start[:, None, :, :], 0.0
+    )  # [B, L_t, L_s, H]
+    M = mx.exp(log_M)
+    causal_mask = mx.tril(mx.ones((L, L)))
+    M = M * causal_mask[None, :, :, None]  # [B, L_t, L_s, H]
 
-    # BX[b, s, h, p, n] = X[b,s,h,p] * B[b,s,n]
-    BX = X[:, :, :, :, None] * B[:, :, None, None, :]  # [B, L, H, P, N]
+    # State contribution: gamma[b,t,h] * (h[b,h,p,:] · C[b,t,:])
+    # Use einsum to avoid materialising [B, L, H, P, N].
+    gamma = mx.exp(cumlog)  # [B, L, H]
+    hC = mx.einsum("bhpn,bln->blhp", h, C)  # [B, L, H, P]
+    y_h = gamma[:, :, :, None] * hC  # [B, L, H, P]
 
-    # Contract BX over N with C via matmul:
-    # BX_flat [B, L*H*P, N] @ C^T [B, N, L] → [B, L*H*P, L_t]
-    BX_flat = BX.reshape(B_sz, L * H * P, N)
-    CT = C.transpose(0, 2, 1)  # [B, N, L]
-    BX_C_flat = BX_flat @ CT   # [B, L*H*P, L_t]
-
-    # Reshape to [B, L_s, H, P, L_t] then move L_t to front → [B, L_t, L_s, H, P]
-    BX_C = BX_C_flat.reshape(B_sz, L, H, P, L)
-    BX_C = mx.transpose(BX_C, (0, 4, 1, 2, 3))  # [B, L_t, L_s, H, P]
-
-    # y_intra[b, t, h, p] = sum_s M[b,t,s,h] * BX_C[b,t,s,h,p]
-    y_intra = (M[:, :, :, :, None] * BX_C).sum(2)  # [B, L_t, H, P]
+    # Intra-chunk: BC[b,t,s] = B[b,s,:] · C[b,t,:]  — only [B, L, L], small.
+    BC = mx.einsum("bsn,btn->bts", B, C)  # [B, L_s, L_t] → reindex as [B, L_t, L_s]
+    # einsum 'bsn,btn->bts' gives result[b,t,s] = sum_n B[b,s,n]*C[b,t,n] ✓
+    MB = M * BC[:, :, :, None]  # [B, L_t, L_s, H]
+    y_intra = mx.einsum("btsh,bshp->bthp", MB, X)  # [B, L, H, P]
 
     y = y_h + y_intra
 
-    # --- Update running state ---
+    # State update — decay_to_end always <= 0, clamp for numerical safety.
     gamma_full = mx.exp(cumlog[:, -1, :])  # [B, H]
-    decay_to_end = mx.exp(cumlog[:, -1:, :] - cumlog_start)  # [B, L, H]
-    dBX = (BX * decay_to_end[:, :, :, None, None]).sum(1)   # [B, H, P, N]
+    decay = mx.exp(
+        mx.minimum(cumlog[:, -1:, :] - cumlog_start, 0.0)
+    )  # [B, L, H]
+    dX = decay[:, :, :, None] * X  # [B, L, H, P]
+    dBX = mx.einsum("bshp,bsn->bhpn", dX, B)  # [B, H, P, N]
     h_new = gamma_full[:, :, None, None] * h + dBX
 
     return y, h_new
@@ -134,14 +125,7 @@ class Mamba2Block(nn.Module):
         self.out_proj = nn.Linear(self.d_inner, d_model, bias=False)
 
     def _causal_conv(self, x: mx.array) -> mx.array:
-        """Apply causal depthwise conv with left-padding.
-
-        Args:
-            x: [B, T, d_inner]
-
-        Returns:
-            [B, T, d_inner]
-        """
+        """Apply causal depthwise conv with left-padding."""
         T = x.shape[1]
         x_pad = mx.pad(x, [(0, 0), (self.d_conv - 1, 0), (0, 0)])
         y = sum(
@@ -157,17 +141,7 @@ class Mamba2Block(nn.Module):
         B: mx.array,
         C: mx.array,
     ) -> mx.array:
-        """Chunked SSD scan over the full sequence.
-
-        Args:
-            X: [B, T, H, P]
-            A_log_dt: [B, T, H]  — log decay (A_log * dt), non-positive
-            B: [B, T, N]
-            C: [B, T, N]
-
-        Returns:
-            Y: [B, T, H, P]
-        """
+        """Chunked SSD scan over the full sequence."""
         B_sz, T, H, P = X.shape
         N = B.shape[-1]
         L = self.chunk_size
@@ -201,7 +175,6 @@ class Mamba2Block(nn.Module):
         x = self.norm(x)
 
         proj = self.in_proj(x)
-        # Split projections
         splits = [
             self.d_inner,
             2 * self.d_inner,
@@ -221,7 +194,6 @@ class Mamba2Block(nn.Module):
         x_heads = x_ssm.reshape(B, T, self.n_heads, self.head_dim)
         y = self._ssd_scan(x_heads, A_log_dt, B_ssm, C_ssm)
 
-        # D skip connection: broadcast over head_dim P
         D_skip = self.D[None, None, :, None] * x_heads
         y = y + D_skip
         y = y.reshape(B, T, self.d_inner) * nn.silu(z)

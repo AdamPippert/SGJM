@@ -420,3 +420,28 @@ class TestMamba2BlockTorch:
         assert _is_attn_layer(7, 8) is True
         assert _is_attn_layer(6, 8) is False
         assert _is_attn_layer(0, 0) is True
+
+    def test_no_nan_in_output_torch(self):
+        """SSD scan must not produce NaN regardless of sequence length."""
+        torch = pytest.importorskip("torch")
+        from sgjm.training.torch_backend.mamba2 import Mamba2Block
+
+        block = Mamba2Block(d_model=32, state_size=8, expand=2, d_conv=4, head_dim=8, chunk_size=4)
+        block.eval()
+        with torch.no_grad():
+            # Long sequence to stress the upper-triangle exp overflow path
+            x = torch.randn(2, 128, 32)
+            y = block(x)
+        assert not torch.isnan(y).any(), "NaN in Mamba2Block output"
+        assert not torch.isinf(y).any(), "Inf in Mamba2Block output"
+
+    def test_no_nan_mlx(self):
+        """MLX SSD scan must not produce NaN regardless of sequence length."""
+        mx = pytest.importorskip("mlx.core")
+        from sgjm.training.mlx_backend.mamba2 import Mamba2Block
+
+        block = Mamba2Block(d_model=32, state_size=8, expand=2, d_conv=4, head_dim=8, chunk_size=4)
+        x = mx.random.normal((2, 128, 32))
+        y = block(x)
+        mx.eval(y)
+        assert not mx.isnan(y).any().item(), "NaN in MLX Mamba2Block output"
