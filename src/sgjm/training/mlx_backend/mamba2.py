@@ -164,6 +164,11 @@ class Mamba2Block(nn.Module):
         chunks: list[mx.array] = []
         for c in range(n_chunks):
             y_chunk, h = _ssd_chunk_mlx(Xc[:, c], Ac[:, c], Bc[:, c], Cc[:, c], h)
+            # Stop gradients from crossing chunk boundaries (truncated BPTT).
+            # Inter-chunk state carries forward information but gradients only
+            # flow within each chunk, preventing cumsum-amplified NaN in the
+            # backward pass for deep-decay heads.
+            h = mx.stop_gradient(h)
             chunks.append(y_chunk)
 
         Y = mx.concatenate(chunks, axis=1)
