@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "sgjm"
 version = "0.0.1"
-description = "Speculative Graph JEPA Model — Phase 1 local research harness"
+description = "Speculative Graph JEPA Model — hybrid Mamba-2/attention speculative decoder, MLX + PyTorch (CUDA/ROCm) training"
 requires-python = ">=3.10"
 dependencies = []
 
