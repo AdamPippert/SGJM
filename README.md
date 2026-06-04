@@ -453,3 +453,11 @@ python -m sgjm.training --size smoke --backend cpu
 ```
 
 All production code must be preceded by a failing test. See [`CLAUDE.md`](CLAUDE.md) for the commit author policy enforced in this repository.
+
+## License
+
+Licensed under the Apache License, Version 2.0. See [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE).
+
+Copyright 2026 Adam Pippert.
+
+> **Status:** `2026.6.5` is an initial pre-release research prototype (Development Status: Alpha). Versions are date-based (CalVer, `YYYY.M.D`). Interfaces, checkpoints, and training recipes may change without notice.
