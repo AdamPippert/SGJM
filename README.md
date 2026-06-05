@@ -28,7 +28,7 @@ SGJM replaces standard autoregressive sampling with a four-component pipeline th
 
 ### Components
 
-**Backbone** — A causal transformer (byte-level, vocab=256) that produces hidden states and next-token logits. SwiGLU MLP, RMS normalization, tied input/output embeddings.
+**Backbone** — A causal byte-level (vocab=256) sequence model that produces hidden states and next-token logits. Configurable as a pure transformer (default) or as a **hybrid Mamba-2 / attention** stack via `ModelConfig.attn_every_n` — when set, every `attn_every_n`-th layer is a full-attention block and the remaining layers are Mamba-2 SSD blocks. SwiGLU MLP, RMS normalization, tied input/output embeddings.
 
 **Drafter** — Projects the parent hidden state to a smaller space (d=192) and uses learnable position queries to speculatively produce `k` token blocks of length `block_size` in a single forward pass. Each branch carries tokens, an endpoint latent, and a log-probability.
 
@@ -68,14 +68,23 @@ Four terms are summed with configurable weights:
 ### Running a training job
 
 ```bash
-# MLX — Apple Silicon (recommended for local runs)
+# Sizes:    smoke | 25m | 100m | 250m | 1b | 25m-hybrid | 250m-hybrid
+# Backends: auto | mlx | cuda | rocm | cpu   (auto detects platform)
+
+# MLX — Apple Silicon
 python -m sgjm.training --size 25m --backend mlx
 
-# CPU fallback
-python -m sgjm.training --size 25m --backend cpu
+# CUDA — NVIDIA
+python -m sgjm.training --size 250m --backend cuda
 
-# Smoke test (4 steps, tiny model)
-python -m sgjm.training --size smoke --backend mlx
+# ROCm — AMD (Strix Halo / Framework Desktop "Hyde")
+python -m sgjm.training --size 250m --backend rocm
+
+# Hybrid Mamba-2 / attention backbone (1 attention + N-1 Mamba-2 blocks)
+python -m sgjm.training --size 25m-hybrid --backend rocm
+
+# CPU fallback (slow; useful for tests)
+python -m sgjm.training --size smoke --backend cpu
 
 # Override individual hyperparameters
 python -m sgjm.training --size 25m --steps 10000 --lr 1e-4 --checkpoint-dir runs/my-run
@@ -190,6 +199,23 @@ Full log: [`results/sgjm-100m-mlx-run1/`](results/sgjm-100m-mlx-run1/)
 Best eval total loss: **1.823** at step 6500. Model converged by step 6500 and plateaued — 32 MiB corpus capacity ceiling. Speculative speedup: **1.28×** on fibonacci prompt (AR 31.9 tok/s → Spec 40.9 tok/s, 100% accept).  
 Full log: [`results/sgjm-250m-mlx-run1/`](results/sgjm-250m-mlx-run1/)
 
+### Run 4 — ROCm cross-platform validation, 2026-05-17 → 2026-05-18
+
+SGJM-25M and SGJM-250M trained end-to-end on AMD Strix Halo (Framework Desktop "Hyde") under PyTorch ROCm. Confirms the dual-backend architecture: identical config + corpus + checkpoint format across MLX and ROCm.
+
+| Run | Backend | Host | Result |
+|-----|---------|------|--------|
+| `sgjm-25m-rocm` | ROCm | Strix Halo | matches MLX 25M trajectory |
+| `sgjm-250m-rocm` | ROCm | Strix Halo | matches MLX 250M trajectory |
+
+Full logs: [`results/hyde-rocm/`](results/hyde-rocm/)
+
+### Run 5 — 1B v1, dual-platform, 2026-05-19 (analyzed; retrain queued)
+
+SGJM-1B trained simultaneously on Mac Studio M1 Ultra (MLX) and Strix Halo (ROCm), 4.6h wall time. Backbone learned successfully; **verifier and accept heads did not learn** — root-caused to a negative-sampling axis bug (verifier negatives were being rolled along the batch dim rather than the sequence dim). Fix landed as `fix(verifier): roll negatives along sequence dim, not batch dim`. Retrain scheduled for 2026-05-22.
+
+Write-up: [`BLOG_1B.md`](BLOG_1B.md). Checkpoint dir: `runs/sgjm-1b-rocm/`.
+
 ---
 
 ## Phase 5 Results — Gate Run & Ablation
@@ -292,6 +318,10 @@ All variants trained identically; only the eval-time merge threshold differs.
 
 ## Generation Benchmark (2026-05-13)
 
+**Production-scale result (250M, Python corpus, MLX)**: **1.28× speculative speedup** on a fibonacci prompt (AR 31.9 tok/s → Spec 40.9 tok/s, 100% accept). See Run 3 above.
+
+The 25M Python-harness benchmark below shows throughput **parity**, not speedup — at the 25M scale the per-call Python overhead dominates the savings from 4-token parallel drafting. The 13.92× compute-FLOPs advantage from the gate run is the theoretical upper bound and is realized only with KV-cache and fused CUDA/Metal kernels.
+
 Benchmark: 200 tokens generated from 64-token prompt, MLX, Apple Silicon, SGJM-25M step 4500.
 
 | Metric | SGJM (50 steps × 4 tokens) | AR (200 steps × 1 token) |
@@ -348,29 +378,50 @@ Full report: [`results/phase5-bench/benchmark_report.txt`](results/phase5-bench/
 - [x] Generation benchmark: Python harness parity (0.99×); 13.92× FLOPs advantage requires KV-cache + kernel fusion
 - [x] 250M scaling run complete (d_model=1024, ~251M params, 32 MiB Python corpus) — best eval total loss 1.823, 99.1% accept, 1.28× speculative speedup
 
+### Post-Gate Scaling — in progress
+
+- [x] 250M MLX run on extended Python corpus (32 MiB) — eval total loss 1.823, 1.28× speculative speedup on fibonacci prompt
+- [x] Cross-platform ROCm runs: SGJM-25M and SGJM-250M on AMD Strix Halo ([`results/hyde-rocm/`](results/hyde-rocm/))
+- [x] Hybrid Mamba-2 / attention backbone added (`25m-hybrid`, `250m-hybrid` sizes; configurable via `ModelConfig.attn_every_n`)
+- [x] SGJM-1B v1 trained dual-platform (Mac Studio MLX + Strix Halo ROCm). Backbone learned; verifier and accept heads did not — root-caused to a verifier-negatives axis bug. See [`BLOG_1B.md`](BLOG_1B.md).
+- [ ] SGJM-1B v2 retrain on 2026-05-22 (both platforms) with the verifier fix in place
+
 ---
 
 ## Repository Layout
 
 ```
 src/sgjm/
-├── graph/          # Node types, address encoding, graph manager
+├── graph/          # Node types, address encoding, graph manager (in-memory speculation tree — not a graph DB)
 ├── branch/         # Lifecycle, policy, verifier protocol
 ├── harness/        # Speculative generation runner, metrics snapshot
 ├── modules/        # Backbone, drafter, judge protocols + stubs
 ├── training/
-│   ├── config.py       # TrainingConfig, ModelConfig, OptimConfig
+│   ├── config.py       # TrainingConfig, ModelConfig, OptimConfig (incl. Mamba-2 + attn_every_n)
 │   ├── data.py         # ByteDataset, corpus loaders
 │   ├── backends.py     # Backend detection (mlx / cuda / rocm / cpu)
-│   ├── mlx_backend/    # MLX model, losses, trainer
-│   └── torch_backend/  # PyTorch model, losses, trainer, baseline
+│   ├── mlx_backend/    # MLX model, losses, trainer, mamba2 SSD blocks
+│   └── torch_backend/  # PyTorch model, losses, trainer, baseline, mamba2 SSD blocks
 ├── eval/           # Metrics, ComparisonReport, checkpoint loader, CLI
+├── bench/          # MLX speculative-vs-AR generation benchmark
+├── demo/           # Generation demo CLI
 └── research/       # ExperimentCard, SweepResult, sweep runner
 
-results/
-├── sgjm-25m-mlx-run1/          # Run 1: training log + config
-├── phase5-eval-gate/           # Gate report JSON (PASS)
-└── phase5-ablation-25m-mlx/    # Ablation sweep: 5 variant JSONs + summary
+results/                            # Eval reports, completed run snapshots
+├── sgjm-25m-mlx-run1/                  # Run 1 — 25M MLX
+├── sgjm-100m-mlx-run1/                 # Run 2 — 100M MLX
+├── sgjm-250m-mlx-run1/                 # Run 3 — 250M MLX, Python corpus
+├── hyde-rocm/                          # Run 4 — 25M + 250M on AMD Strix Halo (ROCm)
+├── phase5-eval-gate/                   # Gate report JSON (PASS)
+├── phase5-ablation-25m-mlx/            # Ablation sweep
+├── phase5-sweeps/                      # Loss-weight / block-size / merge-radius sweeps
+├── phase5-bench/                       # 25M generation benchmark report
+└── demo-{250m,python}/                 # Demo CLI outputs
+
+runs/                               # Active training output (checkpoints + logs)
+├── sgjm-1b-rocm/                       # Run 5 — 1B v1 (analyzed) and v2 (queued 2026-05-22)
+├── sgjm-{25m,250m}-rocm/               # ROCm runs
+└── sgjm-{25m,250m}-hybrid/             # Hybrid Mamba-2 / attention runs
 
 tests/              # Behavior-driven test suite (pytest)
 ```
@@ -380,17 +431,33 @@ tests/              # Behavior-driven test suite (pytest)
 ## Development
 
 ```bash
-# Install with MLX backend (Apple Silicon)
+# MLX — Apple Silicon
 pip install -e '.[mlx,dev]'
 
-# Install with CPU backend (any platform)
+# CUDA — NVIDIA (default PyPI torch wheels)
+pip install -e '.[cuda,dev]'
+
+# ROCm — AMD (Strix Halo, etc.). The [rocm] extra deliberately excludes torch;
+# install ROCm torch wheels from the PyTorch index first, then the extras:
+pip install --index-url https://download.pytorch.org/whl/rocm6.2 torch
+pip install -e '.[rocm,dev]'
+
+# CPU — any platform, slow
 pip install -e '.[cpu,dev]'
 
 # Run tests
 pytest
 
 # Smoke train + eval
-python -m sgjm.training --size smoke --backend mlx
+python -m sgjm.training --size smoke --backend cpu
 ```
 
-All production code must be preceded by a failing test. See `CLAUDE.md` for the full TDD and coding standards enforced in this repository.
+All production code must be preceded by a failing test. See [`CLAUDE.md`](CLAUDE.md) for the commit author policy enforced in this repository.
+
+## License
+
+Licensed under the Apache License, Version 2.0. See [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE).
+
+Copyright 2026 Adam Pippert.
+
+> **Status:** `2026.6.5` is an initial pre-release research prototype (Development Status: Alpha). Versions are date-based (CalVer, `YYYY.M.D`). Interfaces, checkpoints, and training recipes may change without notice.

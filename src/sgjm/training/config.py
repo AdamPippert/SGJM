@@ -23,6 +23,13 @@ class ModelConfig:
     verifier_hidden: int = 256
     dropout: float = 0.0
     tie_embeddings: bool = True
+    # Hybrid backbone: 0 = pure transformer; k = full attention every k layers
+    attn_every_n: int = 0
+    mamba_state_size: int = 64   # SSM state dim N
+    mamba_expand: int = 2        # d_inner = d_model * mamba_expand
+    mamba_d_conv: int = 4        # depthwise conv kernel size
+    mamba_head_dim: int = 64     # SSM head dim; n_heads_mamba = d_inner // mamba_head_dim
+    mamba_chunk_size: int = 64   # chunk size for SSD parallel scan
     # Baseline backbone is sized to match the SGJM *total* (backbone + drafter
     # + judge + verifier) so comparisons are at equal parameter budget.
     baseline_n_layers: int = 11
@@ -31,6 +38,18 @@ class ModelConfig:
         if self.d_model % self.n_heads:
             raise ValueError("d_model must be divisible by n_heads")
         return self.d_model // self.n_heads
+
+
+def is_attn_layer(layer_idx: int, attn_every_n: int) -> bool:
+    """Return True if layer_idx should be a full-attention block.
+
+    When attn_every_n == 0 all layers are attention (pure transformer).
+    Otherwise, layers where (layer_idx + 1) % attn_every_n == 0 are attention;
+    the rest are Mamba-2 SSM blocks.
+    """
+    if attn_every_n == 0:
+        return True
+    return (layer_idx + 1) % attn_every_n == 0
 
 
 @dataclass
@@ -302,6 +321,30 @@ class TrainingConfig:
             corpus_bytes=8192,
             checkpoint_dir="runs/sgjm-smoke",
             amp="off",
+        )
+
+    @classmethod
+    def sgjm_25m_hybrid(cls) -> "TrainingConfig":
+        """25M hybrid: same depth/width as 25M baseline, 1 attention + 9 Mamba-2 blocks.
+
+        Parameter count is ~13-15M (smaller than 25M baseline since Mamba-2 blocks
+        have fewer params than transformer blocks at the same d_model).
+        """
+        cfg = cls.sgjm_25m()
+        return replace(
+            cfg,
+            model=replace(cfg.model, attn_every_n=8, mamba_state_size=64),
+            checkpoint_dir="runs/sgjm-25m-hybrid",
+        )
+
+    @classmethod
+    def sgjm_250m_hybrid(cls) -> "TrainingConfig":
+        """250M hybrid: same depth/width as 250M baseline, 1 attention + 13 Mamba-2 blocks."""
+        cfg = cls.sgjm_250m()
+        return replace(
+            cfg,
+            model=replace(cfg.model, attn_every_n=8, mamba_state_size=128),
+            checkpoint_dir="runs/sgjm-250m-hybrid",
         )
 
     def to_dict(self) -> dict[str, Any]:
