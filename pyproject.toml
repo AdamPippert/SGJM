@@ -24,7 +24,7 @@ dependencies = []
 [project.urls]
 Homepage = "https://github.com/AdamPippert/SGJM"
 Repository = "https://github.com/AdamPippert/SGJM"
-"Model Card" = "https://huggingface.co/adampippert/SGJM"
+"Model Card" = "https://huggingface.co/CoastalDigitalResearch/SGJM"
 
 [project.optional-dependencies]
 # Pick exactly one backend extra plus dev:
