@@ -39,6 +39,9 @@ cpu = ["torch>=2.4", "numpy>=1.26"]
 cuda = ["torch>=2.4", "numpy>=1.26"]
 rocm = ["numpy>=1.26"]
 mlx = ["mlx>=0.18", "numpy>=1.26"]
+# HuggingFace publishing glue (config/modeling adapter + checkpoint converter).
+# Needs a torch backend extra too (cpu/cuda/rocm) to actually build a model.
+hf = ["transformers>=4.40", "safetensors>=0.4"]
 dev = ["pytest>=8.0"]
 
 [tool.setuptools.packages.find]
