@@ -1,6 +1,7 @@
 # SGJM — Speculative Graph JEPA Model
 
 A research prototype combining speculative decoding with Joint Embedding Predictive Architecture (JEPA) to enable parallel draft generation, latent-space branch scoring, and discriminative verification — all within a single trainable system.
+* NOTE: * trained models are now hosted on HuggingFace via my training sponsor, Coastal Digital Research: https://huggingface.co/CoastalDigitalResearch/SGJM
 
 ## Architecture
 
