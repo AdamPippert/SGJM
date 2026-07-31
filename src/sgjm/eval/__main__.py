@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 from sgjm.eval.checkpoint import load_checkpoint
-from sgjm.eval.metrics import compare, evaluate_baseline, evaluate_sgjm
+from sgjm.eval.report import compare
 from sgjm.training.backends import is_torch_backend, resolve_backend, torch_device
 from sgjm.training.data import ByteDataset, load_corpus
 
@@ -49,7 +49,9 @@ def main(argv: list[str] | None = None) -> int:
 
         cfg = sgjm_ckpt.config
         data_path = args.data_path or cfg.data_path
-        corpus = load_corpus(data_path, cfg.corpus_bytes, seed=cfg.seed)
+        corpus = load_corpus(
+            data_path, cfg.corpus_bytes, seed=cfg.seed, source=cfg.data_source
+        )
         split = int(0.95 * len(corpus))
         eval_set = ByteDataset(corpus[split:], cfg.optim.seq_len)
 
@@ -79,6 +81,10 @@ def main(argv: list[str] | None = None) -> int:
             seed=args.seed,
         )
     else:
+        # Imported here, not at module level, so `--backend mlx` never
+        # requires torch to be installed (sgjm.eval.metrics imports it).
+        from sgjm.eval.metrics import evaluate_baseline, evaluate_sgjm
+
         device = torch_device(backend)
 
         sgjm_ckpt = load_checkpoint(args.sgjm, device=device)
@@ -90,7 +96,9 @@ def main(argv: list[str] | None = None) -> int:
 
         cfg = sgjm_ckpt.config
         data_path = args.data_path or cfg.data_path
-        corpus = load_corpus(data_path, cfg.corpus_bytes, seed=cfg.seed)
+        corpus = load_corpus(
+            data_path, cfg.corpus_bytes, seed=cfg.seed, source=cfg.data_source
+        )
         split = int(0.95 * len(corpus))
         eval_set = ByteDataset(corpus[split:], cfg.optim.seq_len)
 

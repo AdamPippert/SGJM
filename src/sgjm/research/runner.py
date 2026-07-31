@@ -7,7 +7,7 @@ from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
-from sgjm.eval.metrics import compare, evaluate_baseline, evaluate_sgjm
+from sgjm.eval.report import compare
 from sgjm.research.cards import ExperimentCard, SweepResult
 from sgjm.research.sweep import Sweep
 from sgjm.training.backends import is_torch_backend, torch_device
@@ -59,6 +59,8 @@ def _eval_run(
     backend: str,
     n_batches: int,
 ) -> dict:
+    from sgjm.eval.metrics import evaluate_sgjm
+
     device = torch_device(backend)
     corpus = load_corpus(cfg.data_path, cfg.corpus_bytes, seed=cfg.seed, source=cfg.data_source)
     split = int(0.95 * len(corpus))
@@ -84,6 +86,8 @@ def _eval_baseline_run(
     backend: str,
     n_batches: int,
 ) -> dict:
+    from sgjm.eval.metrics import evaluate_baseline
+
     device = torch_device(backend)
     corpus = load_corpus(cfg.data_path, cfg.corpus_bytes, seed=cfg.seed, source=cfg.data_source)
     split = int(0.95 * len(corpus))
@@ -144,8 +148,7 @@ def run_sweep(
     eval_batches: int = 8,
     train_baseline_once: bool = True,
 ) -> list[SweepResult]:
-    # Imported here so the module doesn't pull torch on import-time.
-    from sgjm.eval.metrics import BaselineEvalMetrics, SGJMEvalMetrics
+    from sgjm.eval.report import BaselineEvalMetrics, SGJMEvalMetrics
 
     out_path = Path(out_dir)
     out_path.mkdir(parents=True, exist_ok=True)

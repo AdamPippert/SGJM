@@ -4,12 +4,7 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
-import torch
-import torch.nn as nn
-
 from sgjm.training.config import TrainingConfig
-from sgjm.training.torch_backend.baseline import BaselineLM
-from sgjm.training.torch_backend.model import SGJM
 
 
 @dataclass
@@ -22,6 +17,15 @@ class LoadedCheckpoint:
 
 
 def load_checkpoint(path: str | Path, device: str = "cpu") -> LoadedCheckpoint:
+    # Imported here (not at module level) so that importing this module —
+    # e.g. transitively via sgjm.eval.__init__ — never requires torch to
+    # be installed. load_mlx_checkpoint below needs no torch at all.
+    import torch
+    import torch.nn as nn
+
+    from sgjm.training.torch_backend.baseline import BaselineLM
+    from sgjm.training.torch_backend.model import SGJM
+
     p = Path(path)
     ckpt = torch.load(p, map_location=device, weights_only=False)
     cfg = TrainingConfig.from_dict(ckpt["config"])

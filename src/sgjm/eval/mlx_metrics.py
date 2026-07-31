@@ -8,7 +8,7 @@ import mlx.core as mx
 import mlx.nn as nn
 from mlx.utils import tree_flatten
 
-from sgjm.eval.metrics import BaselineEvalMetrics, SGJMEvalMetrics
+from sgjm.eval.report import BaselineEvalMetrics, SGJMEvalMetrics
 from sgjm.training.config import TrainingConfig
 from sgjm.training.data import ByteDataset
 from sgjm.training.mlx_backend.baseline import BaselineLM

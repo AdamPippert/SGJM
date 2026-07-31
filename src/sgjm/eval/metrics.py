@@ -2,65 +2,28 @@ from __future__ import annotations
 
 import math
 import random
-from dataclasses import asdict, dataclass
 from typing import Iterable
 
 import torch
 import torch.nn.functional as F
 
+from sgjm.eval.report import BaselineEvalMetrics, ComparisonReport, SGJMEvalMetrics, compare
 from sgjm.training.config import TrainingConfig
 from sgjm.training.data import ByteDataset
 from sgjm.training.torch_backend.baseline import BaselineLM
 from sgjm.training.torch_backend.model import SGJM
 
-
-@dataclass
-class SGJMEvalMetrics:
-    n_tokens: int
-    n_positions: int
-    token_nll: float
-    token_ppl: float
-    branch_acceptance_rate: float
-    jepa_top1_acc: float
-    jepa_chance_top1: float
-    merge_precision_js: float
-    random_pair_js: float
-    merge_precision_advantage: float
-    compute_per_accepted_token: float
-
-    def to_dict(self) -> dict:
-        return asdict(self)
-
-
-@dataclass
-class BaselineEvalMetrics:
-    n_tokens: int
-    token_nll: float
-    token_ppl: float
-    compute_per_token: float
-
-    def to_dict(self) -> dict:
-        return asdict(self)
-
-
-@dataclass
-class ComparisonReport:
-    sgjm: SGJMEvalMetrics
-    baseline: BaselineEvalMetrics
-    nll_delta: float
-    compute_advantage: float
-    gate_passed: bool
-    gate_reasons: list[str]
-
-    def to_dict(self) -> dict:
-        return {
-            "sgjm": self.sgjm.to_dict(),
-            "baseline": self.baseline.to_dict(),
-            "nll_delta": self.nll_delta,
-            "compute_advantage": self.compute_advantage,
-            "gate_passed": self.gate_passed,
-            "gate_reasons": self.gate_reasons,
-        }
+# Re-exported for backward compatibility — the dataclasses and compare()
+# now live in sgjm.eval.report (which has no torch/mlx dependency); this
+# module keeps them importable from their original location.
+__all__ = [
+    "BaselineEvalMetrics",
+    "ComparisonReport",
+    "SGJMEvalMetrics",
+    "compare",
+    "evaluate_baseline",
+    "evaluate_sgjm",
+]
 
 
 def _iter_batches(
